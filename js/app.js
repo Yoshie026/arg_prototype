@@ -1,12 +1,11 @@
-const MATCH_THRESHOLD = 0.70;
+const MATCH_THRESHOLD = 0.85;
 
-// Phases of the game
 const PHASE = {
-    P1_RECORD: 'p1_record',   // Player 1 records the target sound
-    P1_CONFIRM: 'p1_confirm', // Player 1 reviews and confirms
-    P2_READY: 'p2_ready',     // Hand off to Player 2
-    P2_RECORD: 'p2_record',   // Player 2 records their attempt
-    P2_RESULT: 'p2_result',   // Show comparison results
+    P1_RECORD: 'p1_record',
+    P1_CONFIRM: 'p1_confirm',
+    P2_READY: 'p2_ready',
+    P2_RECORD: 'p2_record',
+    P2_RESULT: 'p2_result',
 };
 
 class SoundMatchGame {
@@ -16,8 +15,12 @@ class SoundMatchGame {
         this.score = 0;
         this.total = 0;
         this.phase = null;
-        this.targetFeatures = null;
+        this.targetFeatures = null;   // Meyda features (for visualization)
+        this.targetEmbedding = null;  // CLAP 512-d embedding (for comparison)
         this.liveAnimFrame = null;
+        this.targetLocation = null;
+        this.map = null;
+        this.mapMarker = null;
 
         this.bindEvents();
     }
@@ -32,10 +35,31 @@ class SoundMatchGame {
     }
 
     async start() {
+        const startBtn = document.getElementById('start-btn');
+        const loadingEl = document.getElementById('loading-status');
+
+        startBtn.disabled = true;
+
         try {
+            // Init audio
             await this.audio.init();
+
+            // Load CLAP model (cached after first download)
+            loadingEl.classList.remove('hidden');
+            loadingEl.textContent = 'Loading sound model (~33 MB, first time only)...';
+
+            await window.clapEngine.load((progress) => {
+                if (progress.status === 'progress' && progress.total) {
+                    const pct = Math.round((progress.loaded / progress.total) * 100);
+                    loadingEl.textContent = `Loading model... ${pct}%`;
+                }
+            });
+
+            loadingEl.textContent = 'Model ready!';
         } catch (err) {
-            alert('Could not initialize audio: ' + err.message);
+            loadingEl.textContent = 'Error loading model: ' + err.message;
+            startBtn.disabled = false;
+            console.error(err);
             return;
         }
 
@@ -45,14 +69,62 @@ class SoundMatchGame {
         this.nextRound();
     }
 
+    // --- Location ---
+
+    captureLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) { resolve(null); return; }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                () => resolve(null),
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
+    showMap(location) {
+        const section = document.getElementById('location-section');
+        const label = document.getElementById('location-label');
+        if (!location) { section.classList.add('hidden'); return; }
+
+        section.classList.remove('hidden');
+        label.textContent = 'Recorded here';
+
+        if (!this.map) {
+            this.map = L.map('map', { zoomControl: false, attributionControl: false })
+                .setView([location.lat, location.lng], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+            }).addTo(this.map);
+        } else {
+            this.map.setView([location.lat, location.lng], 15);
+        }
+
+        if (this.mapMarker) {
+            this.mapMarker.setLatLng([location.lat, location.lng]);
+        } else {
+            this.mapMarker = L.circleMarker([location.lat, location.lng], {
+                radius: 10, color: '#00d4ff', fillColor: '#00d4ff', fillOpacity: 0.5, weight: 2,
+            }).addTo(this.map);
+        }
+        setTimeout(() => this.map.invalidateSize(), 100);
+    }
+
+    hideMap() {
+        document.getElementById('location-section').classList.add('hidden');
+    }
+
     // --- Phase transitions ---
 
     nextRound() {
         this.audio.targetBuffer = null;
         this.audio.recordedBuffer = null;
         this.targetFeatures = null;
+        this.targetEmbedding = null;
+        this.targetLocation = null;
 
         this.viz.clear();
+        this.hideMap();
         this.setPhase(PHASE.P1_RECORD);
     }
 
@@ -66,7 +138,6 @@ class SoundMatchGame {
         const confirmBtn = document.getElementById('confirm-btn');
         const nextBtn = document.getElementById('next-btn');
 
-        // Reset all controls
         recordBtn.classList.remove('recording', 'analyzing');
         recordBtn.textContent = 'Record';
         [playTarget, playRecorded, confirmBtn, nextBtn].forEach(b => b.classList.add('hidden'));
@@ -78,6 +149,7 @@ class SoundMatchGame {
                 phaseLabel.textContent = 'Record a sound for Player 2 to match';
                 recordBtn.classList.remove('hidden');
                 recordBtn.disabled = false;
+                this.hideMap();
                 this.viz.clear();
                 this.viz.drawMessage(this.viz.targetCtx, this.viz.targetCanvas, 'Player 1\'s sound');
                 this.viz.drawIdle();
@@ -94,6 +166,7 @@ class SoundMatchGame {
                 playRecorded.classList.remove('hidden');
                 playRecorded.textContent = 'Play Back';
                 confirmBtn.classList.remove('hidden');
+                this.hideMap();
                 break;
 
             case PHASE.P2_READY:
@@ -103,10 +176,10 @@ class SoundMatchGame {
                 playTarget.classList.remove('hidden');
                 recordBtn.classList.remove('hidden');
                 recordBtn.disabled = false;
-                // Hide P1's fingerprint so P2 only has the audio to go on
                 this.viz.drawMessage(this.viz.targetCtx, this.viz.targetCanvas, 'Press "Play Target" to listen');
                 this.viz.drawIdle();
                 this.viz.drawMessage(this.viz.recordedCtx, this.viz.recordedCanvas, 'Your attempt');
+                this.showMap(this.targetLocation);
                 this.total++;
                 this.updateScore();
                 break;
@@ -120,11 +193,11 @@ class SoundMatchGame {
                 playTarget.classList.remove('hidden');
                 playRecorded.classList.remove('hidden');
                 playRecorded.textContent = 'Play Recording';
-                // Show target fingerprint now that comparison is done
                 this.viz.drawFingerprint(
                     this.viz.targetCtx, this.viz.targetCanvas,
                     this.targetFeatures, 'TARGET (P1)', 200
                 );
+                this.showMap(this.targetLocation);
                 break;
         }
     }
@@ -180,13 +253,25 @@ class SoundMatchGame {
             const buffer = await this.audio.stopRecording();
 
             if (this.phase === PHASE.P1_RECORD || this.phase === PHASE.P1_CONFIRM) {
-                // Player 1 just recorded the target
+                // Player 1 recorded the target
                 this.audio.targetBuffer = buffer;
+
+                // Meyda features for visualization
                 this.targetFeatures = this.audio.extractFeatures(buffer);
                 this.viz.drawFingerprint(
                     this.viz.targetCtx, this.viz.targetCanvas,
                     this.targetFeatures, 'YOUR SOUND', 200
                 );
+
+                // CLAP embedding for comparison — denoise + extract main event first
+                const cleanSamples = this.audio.getCleanEventSamples(buffer);
+                this.targetEmbedding = await window.clapEngine.embed(
+                    cleanSamples, buffer.sampleRate
+                );
+
+                // Capture location
+                this.targetLocation = await this.captureLocation();
+
                 this.setPhase(PHASE.P1_CONFIRM);
             } else {
                 // Player 2 recorded their attempt
@@ -196,24 +281,22 @@ class SoundMatchGame {
                     recordedFeatures, 'YOUR ATTEMPT', 15
                 );
 
-                const score = this.audio.compareSounds(this.targetFeatures, recordedFeatures);
-                const breakdown = this.audio.featureBreakdown(this.targetFeatures, recordedFeatures);
-                this.viz.drawMatchMeter(score, breakdown);
+                // CLAP embedding for comparison
+                const cleanSamples = this.audio.getCleanEventSamples(this.audio.recordedBuffer);
+                const recordedEmbedding = await window.clapEngine.embed(
+                    cleanSamples, this.audio.recordedBuffer.sampleRate
+                );
+
+                // Compare using CLAP embeddings
+                const score = window.clapEngine.similarity(this.targetEmbedding, recordedEmbedding);
+                this.viz.drawMatchMeter(score, null);
+
+                this.setPhase(PHASE.P2_RESULT);
 
                 if (score >= MATCH_THRESHOLD) {
                     this.score++;
                     this.updateScore();
-                    document.getElementById('phase-label').textContent = 'Matched! Nice work.';
-                    document.getElementById('next-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('phase-label').textContent =
-                        `${Math.round(score * 100)}% — not quite. Try again!`;
-                }
-
-                this.setPhase(PHASE.P2_RESULT);
-                // Restore the right label after setPhase overwrites it
-                if (score >= MATCH_THRESHOLD) {
-                    document.getElementById('phase-label').textContent = 'Matched! Nice work.';
+                    document.getElementById('phase-label').textContent = `${Math.round(score * 100)}% — Matched!`;
                     document.getElementById('next-btn').classList.remove('hidden');
                     document.getElementById('record-btn').classList.add('hidden');
                 } else {
@@ -222,17 +305,14 @@ class SoundMatchGame {
                 }
             }
         } catch (err) {
-            console.error('Recording error:', err);
+            console.error('Recording/analysis error:', err);
             btn.classList.remove('analyzing');
             btn.textContent = 'Record';
             btn.disabled = false;
         }
     }
 
-    // --- Confirm (Player 1 done) ---
-
     onConfirm() {
-        // Hand the device to Player 2
         this.setPhase(PHASE.P2_READY);
     }
 
@@ -241,30 +321,18 @@ class SoundMatchGame {
     async playTarget() {
         if (!this.audio.targetBuffer) return;
         const btn = document.getElementById('play-target');
-        btn.disabled = true;
-        btn.textContent = 'Playing...';
-        try {
-            await this.audio.playTarget();
-        } catch (e) {
-            console.warn('Playback error:', e);
-        }
-        btn.disabled = false;
-        btn.textContent = 'Play Target';
+        btn.disabled = true; btn.textContent = 'Playing...';
+        try { await this.audio.playTarget(); } catch (e) { console.warn(e); }
+        btn.disabled = false; btn.textContent = 'Play Target';
     }
 
     async playRecorded() {
         const buffer = this.phase === PHASE.P1_CONFIRM
-            ? this.audio.targetBuffer
-            : this.audio.recordedBuffer;
+            ? this.audio.targetBuffer : this.audio.recordedBuffer;
         if (!buffer) return;
         const btn = document.getElementById('play-recorded');
-        btn.disabled = true;
-        btn.textContent = 'Playing...';
-        try {
-            await this.audio.playBuffer(buffer);
-        } catch (e) {
-            console.warn('Playback error:', e);
-        }
+        btn.disabled = true; btn.textContent = 'Playing...';
+        try { await this.audio.playBuffer(buffer); } catch (e) { console.warn(e); }
         btn.disabled = false;
         btn.textContent = this.phase === PHASE.P1_CONFIRM ? 'Play Back' : 'Play Recording';
     }

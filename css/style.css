@@ -57,6 +57,18 @@ header h1 {
     margin-bottom: 28px;
 }
 
+#loading-status {
+    color: #00d4ff;
+    font-size: 13px;
+    margin-bottom: 16px;
+    animation: fadePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fadePulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
 /* Buttons */
 button {
     background: #161622;
@@ -203,6 +215,30 @@ button:disabled {
 
 .viz-panel.center {
     order: 0;
+}
+
+/* Location / Map */
+#location-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#location-label {
+    color: #888;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+#map {
+    width: 100%;
+    max-width: 500px;
+    height: 200px;
+    margin: 0 auto;
+    border-radius: 8px;
+    border: 1px solid #1a1a2a;
+    overflow: hidden;
 }
 
 canvas {

@@ -36,7 +36,6 @@ class Visualizer {
         const h = canvas._h;
         ctx.clearRect(0, 0, w, h);
 
-        // Background
         ctx.fillStyle = '#0d0d14';
         ctx.fillRect(0, 0, w, h);
 
@@ -51,24 +50,27 @@ class Visualizer {
 
         const frames = features.mfccFrames;
         const numCoeffs = frames[0].length;
+        const totalFrames = frames.length;
 
-        // Downsample frames if too many
+        // Main event boundaries (in original frame indices)
+        const event = features.mainEvent || { start: 0, end: totalFrames - 1 };
+
+        // Downsample for display
         const maxFrames = Math.floor(w / 2);
-        let displayFrames = frames;
-        if (frames.length > maxFrames) {
-            const step = frames.length / maxFrames;
-            displayFrames = [];
-            for (let i = 0; i < maxFrames; i++) {
-                displayFrames.push(frames[Math.floor(i * step)]);
-            }
-        }
+        const displayCount = Math.min(totalFrames, maxFrames);
+        const step = totalFrames / displayCount;
 
-        const cellW = w / displayFrames.length;
-        const cellH = (h - 20) / numCoeffs; // Leave room for label
+        const cellW = w / displayCount;
+        const heatH = h - 20; // leave room for label
+        const cellH = heatH / numCoeffs;
 
-        // Find min/max across all MFCC values for normalization
+        // Map event boundaries to display coordinates
+        const eventStartX = Math.floor((event.start / totalFrames) * w);
+        const eventEndX = Math.ceil(((event.end + 1) / totalFrames) * w);
+
+        // Find min/max for normalization
         let min = Infinity, max = -Infinity;
-        for (const frame of displayFrames) {
+        for (const frame of frames) {
             for (const val of frame) {
                 if (val < min) min = val;
                 if (val > max) max = val;
@@ -76,13 +78,24 @@ class Visualizer {
         }
         const range = max - min || 1;
 
-        // Draw heatmap
-        for (let f = 0; f < displayFrames.length; f++) {
+        // Draw heatmap — dim non-event regions
+        for (let f = 0; f < displayCount; f++) {
+            const srcIdx = Math.floor(f * step);
+            const frame = frames[srcIdx];
+            const inEvent = srcIdx >= event.start && srcIdx <= event.end;
+
             for (let c = 0; c < numCoeffs; c++) {
-                const normalized = (displayFrames[f][c] - min) / range;
+                const normalized = (frame[c] - min) / range;
                 const hue = hueBase + normalized * 50;
-                const lightness = 8 + normalized * 45;
-                const saturation = 60 + normalized * 30;
+                let lightness = 8 + normalized * 45;
+                let saturation = 60 + normalized * 30;
+
+                // Dim non-event frames
+                if (!inEvent) {
+                    lightness *= 0.35;
+                    saturation *= 0.4;
+                }
+
                 ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
                 ctx.fillRect(
                     Math.floor(f * cellW),
@@ -93,19 +106,31 @@ class Visualizer {
             }
         }
 
+        // Draw event highlight border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(eventStartX, 0, eventEndX - eventStartX, heatH);
+        ctx.setLineDash([]);
+
+        // "main event" label above the highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('event', (eventStartX + eventEndX) / 2, 2);
+
         // RMS envelope overlay
         if (features.rmsFrames) {
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
             ctx.lineWidth = 1.5;
             const rmsMax = Math.max(...features.rmsFrames, 0.001);
-            const rmsStep = features.rmsFrames.length > maxFrames
-                ? features.rmsFrames.length / maxFrames : 1;
-            for (let i = 0; i < displayFrames.length; i++) {
-                const ri = Math.floor(i * rmsStep);
+            for (let i = 0; i < displayCount; i++) {
+                const ri = Math.floor(i * step);
                 const val = (features.rmsFrames[ri] || 0) / rmsMax;
                 const x = i * cellW + cellW / 2;
-                const y = (h - 20) - val * (h - 30);
+                const y = heatH - val * (heatH - 10);
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             }
@@ -180,7 +205,7 @@ class Visualizer {
         ctx.fillText('MATCH', cx, cy + 18);
 
         // Collected badge
-        if (score >= 0.7) {
+        if (score >= 0.85) {
             ctx.fillStyle = color;
             ctx.font = 'bold 12px monospace';
             ctx.fillText('COLLECTED!', cx, cy + 38);
@@ -193,7 +218,7 @@ class Visualizer {
     }
 
     drawBreakdownBars(ctx, breakdown, w, h) {
-        const labels = ['timbre', 'brightness', 'tonality', 'texture', 'energy'];
+        const labels = ['timbre', 'pitch', 'brightness', 'tonality', 'texture'];
         const barH = 3;
         const barW = w - 40;
         const startX = 20;

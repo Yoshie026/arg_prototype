@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sound Match</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
     <div id="app">
@@ -15,6 +16,7 @@
 
         <div id="setup" class="screen">
             <p class="setup-desc">Player 1 records a mystery sound. Player 2 tries to match it.</p>
+            <div id="loading-status" class="hidden">Loading sound model (first time only)...</div>
             <button id="start-btn">Start Game</button>
         </div>
 
@@ -36,6 +38,11 @@
                 </div>
             </div>
 
+            <div id="location-section" class="hidden">
+                <div id="location-label"></div>
+                <div id="map"></div>
+            </div>
+
             <div id="controls">
                 <button id="record-btn">Record</button>
                 <button id="play-target" class="hidden">Play Target</button>
@@ -50,9 +57,11 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/meyda/dist/web/meyda.min.js"></script>
+    <script type="module" src="js/clap.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/visualizer.js"></script>
-    <script src="js/app.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
