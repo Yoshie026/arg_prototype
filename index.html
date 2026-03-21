@@ -48,16 +48,8 @@
       box-shadow: 0 24px 64px rgba(0,0,0,0.5);
     }
 
-    .card-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .card-sub {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 32px;
-    }
+    .card-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    .card-sub   { font-size: 0.875rem; color: #6b7280; margin-bottom: 32px; }
 
     /* ── FORM ── */
     label {
@@ -99,12 +91,12 @@
       background: rgba(255,255,255,0.07);
     }
 
-    /* ── AUDIO AUTH BOX ── */
+    /* ── AUDIO BOX ── */
     .audio-box {
       background: #0d1321;
       border: 1px solid rgba(79,142,247,0.25);
       border-radius: 14px;
-      padding: 24px;
+      padding: 22px;
       margin-bottom: 28px;
     }
 
@@ -112,115 +104,94 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-
     .mic-icon {
-      width: 36px; height: 36px;
+      width: 34px; height: 34px;
       background: rgba(79,142,247,0.15);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 1rem;
     }
-
-    .audio-box h3 { font-size: 0.95rem; font-weight: 600; }
-    .audio-box p {
-      font-size: 0.8rem;
+    .audio-box h3 { font-size: 0.9rem; font-weight: 600; }
+    .audio-box > p {
+      font-size: 0.78rem;
       color: #6b7280;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       line-height: 1.5;
     }
 
-    /* ── WAVEFORM ── */
-    .waveform {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      height: 48px;
-      margin-bottom: 16px;
-    }
-    .waveform .bar {
-      width: 5px;
-      border-radius: 3px;
-      background: #4f8ef7;
-      transition: height 0.1s ease, opacity 0.3s;
-      opacity: 0.3;
-    }
-
-    /* ── TONE BUTTONS ── */
-    .tone-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .tone-btn {
-      padding: 12px 6px;
-      border: 2px solid transparent;
+    /* ── CHALLENGE BOX ── */
+    .challenge-box {
+      background: rgba(79,142,247,0.06);
+      border: 1px solid rgba(79,142,247,0.3);
       border-radius: 10px;
-      background: #131929;
-      color: #e8eaf0;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      text-align: center;
     }
-    .tone-btn .note-icon { font-size: 1.2rem; }
-    .tone-btn:hover { border-color: #4f8ef7; background: rgba(79,142,247,0.1); }
-    .tone-btn.active { border-color: #4f8ef7; background: rgba(79,142,247,0.2); transform: scale(0.96); }
-    .tone-btn.correct { border-color: #10b981; background: rgba(16,185,129,0.15); }
-    .tone-btn.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.15); }
-    .tone-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* ── SEQUENCE DISPLAY ── */
-    .sequence-display {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 14px;
-      min-height: 28px;
-    }
-    .seq-dot {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      border: 2px solid rgba(255,255,255,0.1);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem;
+    .challenge-label {
+      font-size: 0.6rem;
       font-weight: 700;
-      transition: all 0.2s;
+      color: #4f8ef7;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
-    .seq-dot.filled { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
-    .seq-dot.playing { background: #f59e0b; border-color: #f59e0b; animation: pulse 0.4s ease; }
-    .seq-dot.matched { background: #10b981; border-color: #10b981; }
+    .challenge-icon { font-size: 2rem; display: block; margin-bottom: 4px; }
+    .challenge-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #e8eaf0;
+    }
+    .challenge-hint {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
 
-    @keyframes pulse {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.3); }
-      100% { transform: scale(1); }
+    /* ── SPECTRUM ── */
+    .spectrum-wrap {
+      background: #060c18;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px 10px 6px;
+      margin-bottom: 12px;
+    }
+    .spectrum-label {
+      font-size: 0.65rem;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    canvas#spectrum-canvas {
+      display: block;
+      width: 100%;
+      height: 60px;
+    }
+    .freq-axis {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6rem;
+      color: #374151;
+      margin-top: 4px;
     }
 
     /* ── BUTTONS ── */
     .btn {
       width: 100%;
-      padding: 13px;
+      padding: 11px;
       border: none;
       border-radius: 10px;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .btn-primary {
-      background: #4f8ef7;
-      color: #fff;
-    }
+    .btn-primary { background: #4f8ef7; color: #fff; }
     .btn-primary:hover { background: #3b7de3; }
     .btn-primary:disabled { background: #1e2d4a; color: #4b5563; cursor: not-allowed; }
 
@@ -230,14 +201,74 @@
       color: #9ca3af;
       margin-bottom: 10px;
     }
-    .btn-ghost:hover { border-color: #4f8ef7; color: #4f8ef7; }
+    .btn-ghost:hover:not(:disabled) { border-color: #4f8ef7; color: #4f8ef7; }
+    .btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-record {
+      background: rgba(220,38,38,0.15);
+      border: 1px solid rgba(220,38,38,0.5);
+      color: #f87171;
+      margin-bottom: 10px;
+    }
+    .btn-record:hover:not(:disabled) {
+      background: rgba(220,38,38,0.25);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .btn-record.recording {
+      background: rgba(220,38,38,0.3);
+      border-color: #dc2626;
+      color: #fca5a5;
+      animation: pulse-rec 1s ease-in-out infinite;
+    }
+    .btn-record:disabled { opacity: 0.4; cursor: not-allowed; }
+    @keyframes pulse-rec {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+      50% { opacity: 0.85; box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+    }
+
+    /* ── MATCH REPORT ── */
+    .match-report {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #060c18;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .match-report.visible { display: flex; }
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+    }
+    .match-band { color: #6b7280; width: 70px; flex-shrink: 0; }
+    .match-track {
+      flex: 1;
+      height: 7px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .match-fill {
+      height: 100%;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .match-fill.hi  { background: #10b981; }
+    .match-fill.mid { background: #f59e0b; }
+    .match-fill.lo  { background: #ef4444; }
+    .match-pct { font-size: 0.7rem; font-weight: 700; min-width: 34px; text-align: right; }
 
     /* ── STATUS MESSAGE ── */
     .status-msg {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       text-align: center;
-      min-height: 20px;
-      margin-bottom: 10px;
+      min-height: 18px;
       font-weight: 500;
     }
     .status-msg.error   { color: #ef4444; }
@@ -245,29 +276,14 @@
     .status-msg.info    { color: #f59e0b; }
 
     /* ── STEP INDICATORS ── */
-    .steps {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 28px;
-    }
-    .step {
-      flex: 1;
-      height: 3px;
-      border-radius: 2px;
-      background: rgba(255,255,255,0.07);
-      transition: background 0.3s;
-    }
-    .step.done { background: #10b981; }
+    .steps { display: flex; gap: 6px; margin-bottom: 28px; }
+    .step  { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.07); transition: background 0.3s; }
+    .step.done   { background: #10b981; }
     .step.active { background: #4f8ef7; }
 
-    /* ── DASHBOARD (post-login) ── */
+    /* ── DASHBOARD ── */
     #dashboard { display: none; }
-    .dash-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 28px;
-    }
+    .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
     .dash-header h2 { font-size: 1.3rem; font-weight: 700; }
     .dash-header p  { font-size: 0.8rem; color: #6b7280; margin-top: 2px; }
     .balance-card {
@@ -277,14 +293,12 @@
       padding: 28px;
       margin-bottom: 20px;
     }
-    .balance-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    .balance-label  { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
     .balance-amount { font-size: 2.4rem; font-weight: 800; margin: 6px 0; }
-    .balance-sub { font-size: 0.8rem; color: #4f8ef7; }
+    .balance-sub    { font-size: 0.8rem; color: #4f8ef7; }
     .tx-list { list-style: none; }
     .tx-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       padding: 14px 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
@@ -295,11 +309,7 @@
     .tx-amt.credit { color: #10b981; }
     .tx-amt.debit  { color: #ef4444; }
 
-    #logout-btn {
-      width: auto;
-      padding: 8px 18px;
-      font-size: 0.8rem;
-    }
+    #logout-btn { width: auto; padding: 8px 18px; font-size: 0.8rem; }
   </style>
 </head>
 <body>
@@ -317,9 +327,9 @@
     <div class="card-sub">Welcome back. Please authenticate to continue.</div>
 
     <div class="steps">
-      <div class="step active"  id="step1"></div>
-      <div class="step"         id="step2"></div>
-      <div class="step"         id="step3"></div>
+      <div class="step active" id="step1"></div>
+      <div class="step"        id="step2"></div>
+      <div class="step"        id="step3"></div>
     </div>
 
     <label for="username">Account ID</label>
@@ -328,28 +338,65 @@
     <label for="password">Password</label>
     <input type="password" id="password" placeholder="••••••••" />
 
-    <div class="divider">Audio Authentication Required</div>
+    <div class="divider">Audio Frequency Authentication</div>
 
+    <!-- ── AUDIO AUTH BOX ── -->
     <div class="audio-box">
       <div class="audio-box-header">
-        <div class="mic-icon">🔊</div>
-        <div>
-          <h3>Sound Matching</h3>
+        <div class="mic-icon">🎙</div>
+        <div><h3>Acoustic Verification</h3></div>
+      </div>
+      <p>Reproduce the sound described below using your environment. Your microphone will capture and verify its frequency signature.</p>
+
+      <!-- Challenge -->
+      <div class="challenge-box" id="challenge-box">
+        <div class="challenge-label">Reproduce this sound</div>
+        <span class="challenge-icon" id="challenge-icon"></span>
+        <div class="challenge-name" id="challenge-name">Loading…</div>
+        <div class="challenge-hint" id="challenge-hint"></div>
+      </div>
+
+      <!-- Spectrum canvas -->
+      <div class="spectrum-wrap">
+        <div class="spectrum-label">
+          <span id="spectrum-mode-label">— AWAITING INPUT —</span>
+          <span id="spectrum-legend" style="color:#4f8ef7;display:none;">■ TARGET &nbsp;<span style="color:#10b981">■ YOUR SOUND</span></span>
+        </div>
+        <canvas id="spectrum-canvas" width="400" height="60"></canvas>
+        <div class="freq-axis">
+          <span>SUB</span><span>LOW</span><span>MID</span><span>HI-MID</span><span>HIGH</span>
         </div>
       </div>
-      <p>Listen to the tone sequence, then tap the matching tones in the same order to verify it's you.</p>
 
-      <!-- Sequence dots -->
-      <div class="sequence-display" id="seq-display"></div>
+      <!-- Record button -->
+      <button class="btn btn-record" id="record-btn" onclick="toggleRecording()">🎙 Start Recording</button>
 
-      <!-- Animated waveform -->
-      <div class="waveform" id="waveform"></div>
+      <!-- Match report -->
+      <div class="match-report" id="match-report">
+        <div class="match-row">
+          <span class="match-band">Sub / Low</span>
+          <div class="match-track"><div class="match-fill" id="mf-0"></div></div>
+          <span class="match-pct" id="mp-0">—</span>
+        </div>
+        <div class="match-row">
+          <span class="match-band">Mid</span>
+          <div class="match-track"><div class="match-fill" id="mf-1"></div></div>
+          <span class="match-pct" id="mp-1">—</span>
+        </div>
+        <div class="match-row">
+          <span class="match-band">Hi-Mid</span>
+          <div class="match-track"><div class="match-fill" id="mf-2"></div></div>
+          <span class="match-pct" id="mp-2">—</span>
+        </div>
+        <div class="match-row">
+          <span class="match-band">High</span>
+          <div class="match-track"><div class="match-fill" id="mf-3"></div></div>
+          <span class="match-pct" id="mp-3">—</span>
+        </div>
+      </div>
 
-      <!-- Play button -->
-      <button class="btn btn-ghost" id="play-btn" onclick="startAudioAuth()">▶ Play Authentication Tone</button>
-
-      <!-- Tone buttons -->
-      <div class="tone-grid" id="tone-grid"></div>
+      <!-- Analyze button -->
+      <button class="btn btn-ghost" id="analyze-btn" onclick="runMatch()" disabled style="margin-bottom:10px;">🔍 Analyze Frequency Match</button>
 
       <div class="status-msg" id="audio-status"></div>
     </div>
@@ -401,245 +448,425 @@
 </main>
 
 <script>
-  // ── Audio context ──
-  let audioCtx = null;
+  // ─────────────────────────────────────────────
+  //  SOUND DEFINITIONS
+  //  profile: 32 values (0-255) representing
+  //  relative energy at each frequency band
+  //  (log-scale from ~80 Hz to ~8000 Hz)
+  // ─────────────────────────────────────────────
+  const SOUNDS = [
+    {
+      id: 'door',
+      label: 'Door Knob',
+      icon: '🚪',
+      hint: 'Creak a chair, scratch wood, or rub your palms together',
+      // Heavy mid-low sweep
+      profile: [55,80,140,210,230,215,195,175,140,105,75,52,38,28,20,14,10,8,6,5,4,3,3,2,2,2,1,1,1,1,1,1],
+    },
+    {
+      id: 'footstep',
+      label: 'Footstep',
+      icon: '👣',
+      hint: 'Thump your fist on a table or stomp your foot',
+      // Very heavy sub-bass thud
+      profile: [245,230,200,165,120,80,50,28,15,8,5,3,2,2,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    },
+    {
+      id: 'rain',
+      label: 'Rain',
+      icon: '🌧',
+      hint: 'Tap your fingers rapidly on a hard surface',
+      // Concentrated energy in the highs
+      profile: [4,4,3,3,4,4,5,6,8,10,13,17,22,30,42,58,80,115,155,185,210,220,215,205,195,185,175,165,155,145,135,125],
+    },
+    {
+      id: 'wind',
+      label: 'Wind',
+      icon: '💨',
+      hint: 'Blow steadily across your microphone',
+      // Band-pass peak in the mid range
+      profile: [12,16,22,32,50,78,115,155,190,210,205,195,178,158,135,112,90,70,52,38,27,18,12,8,5,3,2,2,1,1,1,1],
+    },
+    {
+      id: 'keyboard',
+      label: 'Keyboard Click',
+      icon: '⌨️',
+      hint: 'Click your fingernails sharply on a hard surface',
+      // Sharp transient, high-mid concentration
+      profile: [2,2,3,3,4,5,6,8,12,18,28,42,62,90,125,165,200,215,210,195,170,140,108,78,52,32,18,10,5,3,2,1],
+    },
+    {
+      id: 'thunder',
+      label: 'Thunder',
+      icon: '⚡',
+      hint: 'Produce a deep rumble — hum low and thump a surface',
+      // Dominant sub-bass, steep rolloff
+      profile: [250,245,235,215,180,140,100,68,44,28,16,9,5,3,2,2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    },
+  ];
+
+  // ─────────────────────────────────────────────
+  //  STATE
+  // ─────────────────────────────────────────────
+  let audioCtx       = null;
+  let secretSound    = null;
+  let authPassed     = false;
+  let animFrame      = null;
+  let isRecording    = false;
+  let micStream      = null;
+  let micSource      = null;
+  let micAnalyser    = null;
+  let recordingFrames= [];
+  let recordedProfile= null;
+  let recordTimer    = null;
+  const RECORD_MS    = 3000;   // auto-stop after 3 s
+
+  // ─────────────────────────────────────────────
+  //  INIT — pick challenge
+  // ─────────────────────────────────────────────
+  secretSound = SOUNDS[Math.floor(Math.random() * SOUNDS.length)];
+  document.getElementById('challenge-icon').textContent = secretSound.icon;
+  document.getElementById('challenge-name').textContent = secretSound.label;
+  document.getElementById('challenge-hint').textContent = secretSound.hint;
+
   function getCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
   }
 
-  // ── Tone definitions ──
-  const TONES = [
-    { id: 'A', label: 'Low',     icon: '🔵', freq: 220 },
-    { id: 'B', label: 'Mid-Low', icon: '🟢', freq: 330 },
-    { id: 'C', label: 'Mid-Hi',  icon: '🟡', freq: 440 },
-    { id: 'D', label: 'High',    icon: '🔴', freq: 587 },
-  ];
+  // ─────────────────────────────────────────────
+  //  CANVAS SPECTRUM
+  // ─────────────────────────────────────────────
+  const canvas = document.getElementById('spectrum-canvas');
+  const ctx2d  = canvas.getContext('2d');
+  const BARS   = 32;
 
-  const SEQ_LEN = 4;
-  let sequence      = [];   // correct sequence
-  let userSequence  = [];
-  let authPassed    = false;
-  let isPlaying     = false;
-
-  // ── Build tone grid ──
-  const grid = document.getElementById('tone-grid');
-  TONES.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className   = 'tone-btn';
-    btn.id          = 'tone-' + t.id;
-    btn.disabled    = true;
-    btn.innerHTML   = `<span class="note-icon">${t.icon}</span>${t.label}`;
-    btn.onclick     = () => handleTonePress(t);
-    grid.appendChild(btn);
-  });
-
-  // ── Build waveform bars ──
-  const waveform = document.getElementById('waveform');
-  const barCount = 24;
-  for (let i = 0; i < barCount; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    bar.style.height = '8px';
-    waveform.appendChild(bar);
+  function resizeCanvas() {
+    const W = canvas.clientWidth || canvas.width;
+    const H = canvas.height;
+    const dpr = devicePixelRatio || 1;
+    if (canvas.width !== Math.round(W * dpr)) {
+      canvas.width  = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx2d.scale(dpr, dpr);
+    }
+    return { cW: canvas.width / dpr, cH: canvas.height / dpr };
   }
 
-  // ── Generate random sequence ──
-  function generateSequence() {
-    sequence = [];
-    for (let i = 0; i < SEQ_LEN; i++) {
-      sequence.push(TONES[Math.floor(Math.random() * TONES.length)]);
+  // Draw the target profile as faint blue ghost bars
+  function drawTargetGhost(cW, cH) {
+    const barW = (cW / BARS) - 1.5;
+    const tProf = secretSound.profile;
+    for (let i = 0; i < BARS; i++) {
+      const x = i * (cW / BARS) + 0.75;
+      const h = (tProf[i] / 255) * cH * 0.88;
+      ctx2d.fillStyle = 'rgba(79,142,247,0.22)';
+      ctx2d.fillRect(x, cH - h, barW, h);
     }
   }
 
-  // ── Render sequence dots ──
-  function renderDots(state) {
-    const display = document.getElementById('seq-display');
-    display.innerHTML = '';
-    for (let i = 0; i < SEQ_LEN; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'seq-dot';
-      if (state === 'playing' && i < sequence.length) {
-        dot.textContent = sequence[i].id;
+  // Animated loop: ghost target + live/recorded overlay
+  function animateSpectrum(liveDataFn) {
+    cancelAnimationFrame(animFrame);
+    function draw() {
+      const { cW, cH } = resizeCanvas();
+      ctx2d.clearRect(0, 0, cW, cH);
+      drawTargetGhost(cW, cH);
+
+      const barW = (cW / BARS) - 1.5;
+      const data = liveDataFn();
+      if (data) {
+        for (let i = 0; i < BARS; i++) {
+          const x = i * (cW / BARS) + 0.75;
+          const v = data[i] || 0;
+          const h = (v / 255) * cH * 0.88;
+          ctx2d.fillStyle = 'rgba(16,185,129,0.8)';
+          ctx2d.fillRect(x, cH - h, barW, Math.max(h, 1));
+        }
       }
-      display.appendChild(dot);
+      animFrame = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  // Static frame: target (blue) + recorded (green)
+  function drawStaticComparison(recProfile) {
+    cancelAnimationFrame(animFrame);
+    const { cW, cH } = resizeCanvas();
+    ctx2d.clearRect(0, 0, cW, cH);
+    const barW = (cW / BARS) - 1.5;
+    const tProf = secretSound.profile;
+    for (let i = 0; i < BARS; i++) {
+      const x = i * (cW / BARS) + 0.75;
+      // target
+      const th = (tProf[i] / 255) * cH * 0.88;
+      ctx2d.fillStyle = 'rgba(79,142,247,0.45)';
+      ctx2d.fillRect(x, cH - th, barW, th);
+      // recorded
+      if (recProfile) {
+        const rh = (recProfile[i] / 255) * cH * 0.88;
+        ctx2d.fillStyle = 'rgba(16,185,129,0.75)';
+        ctx2d.fillRect(x, cH - rh, barW, Math.max(rh, 1));
+      }
     }
   }
 
-  // ── Animate waveform ──
-  let waveInterval = null;
-  function startWave() {
-    const bars = waveform.querySelectorAll('.bar');
-    bars.forEach(b => b.style.opacity = '1');
-    waveInterval = setInterval(() => {
-      bars.forEach(b => {
-        const h = 6 + Math.random() * 36;
-        b.style.height = h + 'px';
-      });
-    }, 80);
-  }
-  function stopWave() {
-    clearInterval(waveInterval);
-    const bars = waveform.querySelectorAll('.bar');
-    bars.forEach(b => { b.style.height = '8px'; b.style.opacity = '0.3'; });
-  }
-
-  // ── Play a single tone ──
-  function playTone(freq, duration = 0.4) {
-    const ctx = getCtx();
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration - 0.02);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration);
+  // Initial ghost-only view (idle animation)
+  function idleAnimation() {
+    cancelAnimationFrame(animFrame);
+    let t = 0;
+    function draw() {
+      const { cW, cH } = resizeCanvas();
+      ctx2d.clearRect(0, 0, cW, cH);
+      const barW = (cW / BARS) - 1.5;
+      const tProf = secretSound.profile;
+      for (let i = 0; i < BARS; i++) {
+        const x = i * (cW / BARS) + 0.75;
+        const wave = 1 + 0.04 * Math.sin(t * 0.04 + i * 0.4);
+        const h = (tProf[i] / 255) * cH * 0.88 * wave;
+        ctx2d.fillStyle = 'rgba(79,142,247,0.22)';
+        ctx2d.fillRect(x, cH - h, barW, h);
+      }
+      t++;
+      animFrame = requestAnimationFrame(draw);
+    }
+    draw();
   }
 
-  // ── Play a "success" chime ──
-  function playSuccess() {
-    [523, 659, 784].forEach((f, i) => {
-      setTimeout(() => playTone(f, 0.3), i * 180);
-    });
+  idleAnimation();
+
+  // ─────────────────────────────────────────────
+  //  FREQUENCY EXTRACTION
+  //  Map FFT bins → 32 log-scale bands (80–8000 Hz)
+  // ─────────────────────────────────────────────
+  const FREQ_MIN = 80, FREQ_MAX = 8000;
+
+  function binsToProfile(fftData, sampleRate) {
+    const binCount = fftData.length;
+    const profile = new Array(BARS);
+    for (let b = 0; b < BARS; b++) {
+      const fLo = FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, b / BARS);
+      const fHi = FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, (b + 1) / BARS);
+      const binLo = Math.floor(fLo / (sampleRate / 2) * binCount);
+      const binHi = Math.ceil(fHi  / (sampleRate / 2) * binCount);
+      let sum = 0, n = 0;
+      for (let i = binLo; i <= Math.min(binHi, binCount - 1); i++) {
+        sum += fftData[i]; n++;
+      }
+      profile[b] = n > 0 ? sum / n : 0;
+    }
+    // Normalise to 0–255
+    const mx = Math.max(...profile, 1);
+    return profile.map(v => Math.round((v / mx) * 255));
   }
 
-  // ── Play the authentication sequence ──
-  async function startAudioAuth() {
-    if (isPlaying) return;
-    isPlaying = true;
+  // Average accumulated frames
+  function averageFrames(frames) {
+    if (!frames.length) return new Array(BARS).fill(0);
+    const len = frames[0].length;
+    const avg = new Array(len).fill(0);
+    for (const f of frames) for (let i = 0; i < len; i++) avg[i] += f[i];
+    for (let i = 0; i < len; i++) avg[i] /= frames.length;
+    return avg;
+  }
 
-    generateSequence();
-    userSequence = [];
-    authPassed   = false;
-    setToneButtons(false, true);
-    updateStatus('', '');
+  // ─────────────────────────────────────────────
+  //  RECORDING
+  // ─────────────────────────────────────────────
+  async function toggleRecording() {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      await startRecording();
+    }
+  }
 
-    const playBtn = document.getElementById('play-btn');
-    playBtn.disabled   = true;
-    playBtn.textContent = '🔊 Playing…';
-
-    renderDots('playing');
-    startWave();
-
-    const dots = document.getElementById('seq-display').querySelectorAll('.seq-dot');
-
-    for (let i = 0; i < sequence.length; i++) {
-      dots[i].classList.add('playing');
-      playTone(sequence[i].freq, 0.5);
-      await sleep(700);
-      dots[i].classList.remove('playing');
-      dots[i].classList.add('filled');
+  async function startRecording() {
+    // Reset previous result
+    recordedProfile = null;
+    recordingFrames = [];
+    document.getElementById('analyze-btn').disabled = true;
+    document.getElementById('match-report').classList.remove('visible');
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('mf-' + i).style.width = '0%';
+      document.getElementById('mp-' + i).textContent = '—';
     }
 
-    stopWave();
-    await sleep(300);
-
-    // Hide labels from dots (challenge mode)
-    dots.forEach(d => { d.textContent = ''; });
-
-    playBtn.textContent = '↺ Replay Tone';
-    playBtn.disabled    = false;
-    isPlaying           = false;
-
-    // Enable tone buttons for user input
-    setToneButtons(true, false);
-    updateStep(2);
-    updateStatus('Now match the sequence — tap the tones in order.', 'info');
-    renderUserDots();
-  }
-
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-  // ── Enable / disable tone buttons ──
-  function setToneButtons(enabled) {
-    TONES.forEach(t => {
-      document.getElementById('tone-' + t.id).disabled = !enabled;
-    });
-  }
-
-  // ── Handle a tone press ──
-  function handleTonePress(tone) {
-    if (authPassed) return;
-    playTone(tone.freq, 0.3);
-
-    const btn = document.getElementById('tone-' + tone.id);
-    btn.classList.add('active');
-    setTimeout(() => btn.classList.remove('active'), 200);
-
-    userSequence.push(tone);
-    renderUserDots();
-
-    // Check so far
-    const idx = userSequence.length - 1;
-    if (userSequence[idx].id !== sequence[idx].id) {
-      // Wrong!
-      btn.classList.add('wrong');
-      setTimeout(() => btn.classList.remove('wrong'), 600);
-      updateStatus('Incorrect sequence. Listen again and retry.', 'error');
-      setToneButtons(false);
-      userSequence = [];
-      setTimeout(() => { renderUserDots(); setToneButtons(true); updateStatus('Try again — match the sequence.', 'info'); }, 900);
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch (e) {
+      setStatus('Microphone access denied. Please allow mic access and try again.', 'error');
       return;
     }
 
-    if (userSequence.length === SEQ_LEN) {
-      // Full match!
-      authPassed = true;
-      setToneButtons(false);
-      playSuccess();
-      markDotsMatched();
-      updateStatus('✓ Audio authentication successful!', 'success');
-      updateStep(3);
-      document.getElementById('login-btn').disabled = false;
+    const ctx = getCtx();
+    micAnalyser = ctx.createAnalyser();
+    micAnalyser.fftSize = 2048;
+    micAnalyser.smoothingTimeConstant = 0.6;
+    micSource = ctx.createMediaStreamSource(micStream);
+    micSource.connect(micAnalyser);
+
+    isRecording = true;
+    document.getElementById('record-btn').textContent = '⏹ Stop Recording';
+    document.getElementById('record-btn').classList.add('recording');
+    document.getElementById('spectrum-legend').style.display = '';
+    document.getElementById('spectrum-mode-label').textContent = '— LIVE MIC —';
+    setStatus('Recording… make the sound now!', 'info');
+    updateStep(2);
+
+    const fftBuf = new Uint8Array(micAnalyser.frequencyBinCount);
+
+    // Collect frames loop
+    function collectFrame() {
+      if (!isRecording) return;
+      micAnalyser.getByteFrequencyData(fftBuf);
+      recordingFrames.push(Array.from(fftBuf));
+      animFrame && cancelAnimationFrame(animFrame);
     }
+    const frameInterval = setInterval(() => {
+      if (!isRecording) { clearInterval(frameInterval); return; }
+      micAnalyser.getByteFrequencyData(fftBuf);
+      recordingFrames.push(Array.from(fftBuf));
+    }, 30);
+
+    // Live visualisation
+    animateSpectrum(() => {
+      micAnalyser.getByteFrequencyData(fftBuf);
+      return binsToProfile(fftBuf, ctx.sampleRate);
+    });
+
+    // Auto-stop
+    recordTimer = setTimeout(() => {
+      clearInterval(frameInterval);
+      stopRecording();
+    }, RECORD_MS);
   }
 
-  // ── Render user progress dots ──
-  function renderUserDots() {
-    const dots = document.getElementById('seq-display').querySelectorAll('.seq-dot');
-    dots.forEach((d, i) => {
-      d.classList.remove('filled', 'matched');
-      if (i < userSequence.length) {
-        d.textContent = userSequence[i].id;
-        d.classList.add('filled');
+  function stopRecording() {
+    if (!isRecording) return;
+    isRecording = false;
+    clearTimeout(recordTimer);
+
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    if (micSource)  { try { micSource.disconnect(); } catch(_) {} }
+
+    const btn = document.getElementById('record-btn');
+    btn.classList.remove('recording');
+    btn.textContent = '🔄 Record Again';
+
+    if (recordingFrames.length === 0) {
+      setStatus('No audio captured. Try again.', 'error');
+      idleAnimation();
+      return;
+    }
+
+    // Compute recorded profile
+    const ctx = getCtx();
+    const avgBins = averageFrames(recordingFrames);
+    recordedProfile = binsToProfile(avgBins, ctx.sampleRate);
+
+    drawStaticComparison(recordedProfile);
+    document.getElementById('spectrum-mode-label').textContent = '— COMPARISON —';
+    document.getElementById('analyze-btn').disabled = false;
+    setStatus('Recording complete. Run analysis when ready.', 'info');
+  }
+
+  // ─────────────────────────────────────────────
+  //  FREQUENCY MATCH ANALYSIS
+  // ─────────────────────────────────────────────
+  function runMatch() {
+    if (!recordedProfile) return;
+
+    const analyzeBtn = document.getElementById('analyze-btn');
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = '⏳ Analyzing…';
+    setStatus('', '');
+
+    const report = document.getElementById('match-report');
+    report.classList.add('visible');
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('mf-' + i).style.width = '0%';
+      document.getElementById('mp-' + i).textContent = '—';
+    }
+
+    // Normalise both profiles to 0-1
+    const tProf = secretSound.profile;
+    const tMax = Math.max(...tProf, 1);
+    const rMax = Math.max(...recordedProfile, 1);
+    const tN = tProf.map(v => v / tMax);
+    const rN = recordedProfile.map(v => v / rMax);
+
+    // Band ranges (indices into 32-bar profile)
+    const BANDS = [
+      [0, 7],   // Sub / Low
+      [8, 15],  // Mid
+      [16, 23], // Hi-Mid
+      [24, 31], // High
+    ];
+
+    // Per-band similarity: 1 - mean absolute difference
+    const scores = BANDS.map(([lo, hi]) => {
+      let sum = 0;
+      for (let i = lo; i <= hi; i++) sum += Math.abs(tN[i] - rN[i]);
+      const mad = sum / (hi - lo + 1);
+      return Math.round((1 - mad) * 100);
+    });
+
+    const overall = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const colorClass = pct => pct >= 72 ? 'hi' : pct >= 48 ? 'mid' : 'lo';
+
+    scores.forEach((pct, i) => {
+      setTimeout(() => {
+        const fill  = document.getElementById('mf-' + i);
+        const label = document.getElementById('mp-' + i);
+        fill.className = 'match-fill ' + colorClass(pct);
+        fill.style.width = pct + '%';
+        label.textContent = pct + '%';
+        label.style.color = pct >= 72 ? '#10b981' : pct >= 48 ? '#f59e0b' : '#ef4444';
+      }, i * 280);
+    });
+
+    setTimeout(() => {
+      if (overall >= 65) {
+        setStatus('✓ FREQUENCY MATCH CONFIRMED — Authentication passed', 'success');
+        authPassed = true;
+        document.getElementById('login-btn').disabled = false;
+        document.getElementById('record-btn').disabled = true;
+        analyzeBtn.textContent = '✓ Match Confirmed';
+        updateStep(3);
       } else {
-        d.textContent = '';
+        setStatus('✗ Frequency mismatch. Try again — listen to the hint.', 'error');
+        analyzeBtn.textContent = '🔍 Analyze Frequency Match';
+        analyzeBtn.disabled = true;   // re-enable after new recording
+        document.getElementById('record-btn').disabled = false;
       }
-    });
+    }, 4 * 280 + 500);
   }
 
-  function markDotsMatched() {
-    document.getElementById('seq-display').querySelectorAll('.seq-dot').forEach(d => {
-      d.classList.add('matched');
-    });
-  }
-
-  // ── Status text ──
-  function updateStatus(msg, type) {
+  // ─────────────────────────────────────────────
+  //  HELPERS
+  // ─────────────────────────────────────────────
+  function setStatus(msg, type) {
     const el = document.getElementById('audio-status');
-    el.textContent  = msg;
-    el.className    = 'status-msg ' + type;
+    el.textContent = msg;
+    el.className = 'status-msg ' + (type || '');
   }
 
-  // ── Step indicator ──
   function updateStep(n) {
     for (let i = 1; i <= 3; i++) {
-      const el = document.getElementById('step' + i);
-      el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+      document.getElementById('step' + i).className =
+        'step' + (i < n ? ' done' : i === n ? ' active' : '');
     }
   }
 
-  // ── Submit login ──
+  // ─────────────────────────────────────────────
+  //  LOGIN / LOGOUT
+  // ─────────────────────────────────────────────
   function submitLogin() {
     const user = document.getElementById('username').value.trim();
     const pass = document.getElementById('password').value;
-    if (!user || !pass) { updateStatus('Please enter your Account ID and password.', 'error'); return; }
-    if (!authPassed)    { updateStatus('Complete audio authentication first.', 'error'); return; }
-
+    if (!user || !pass) { setStatus('Please enter your Account ID and password.', 'error'); return; }
+    if (!authPassed)    { setStatus('Complete frequency authentication first.', 'error'); return; }
     document.getElementById('login-btn').textContent = 'Authenticating…';
     setTimeout(() => {
       document.getElementById('login-card').style.display = 'none';
@@ -648,27 +875,9 @@
     }, 800);
   }
 
-  // ── Logout ──
   function logout() {
-    document.getElementById('dashboard').style.display  = 'none';
-    document.getElementById('login-card').style.display = 'block';
-    document.getElementById('username').value  = '';
-    document.getElementById('password').value  = '';
-    document.getElementById('login-btn').textContent = 'Sign In';
-    document.getElementById('login-btn').disabled    = true;
-    authPassed   = false;
-    userSequence = [];
-    sequence     = [];
-    setToneButtons(false);
-    updateStatus('', '');
-    updateStep(1);
-    renderDots('empty');
-    document.getElementById('play-btn').textContent = '▶ Play Authentication Tone';
-    document.getElementById('play-btn').disabled    = false;
+    location.reload();
   }
-
-  // ── Init ──
-  renderDots('empty');
 </script>
 
 </body>
