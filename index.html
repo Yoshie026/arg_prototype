@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Match</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Sound Match</h1>
+            <p class="subtitle">Record a sound. Challenge your friend to match it.</p>
+        </header>
+
+        <div id="setup" class="screen">
+            <p class="setup-desc">Player 1 records a mystery sound. Player 2 tries to match it.</p>
+            <button id="start-btn">Start Game</button>
+        </div>
+
+        <div id="game" class="screen hidden">
+            <div id="turn-banner">
+                <span id="player-label">Player 1</span>
+                <span id="phase-label">Record a sound</span>
+            </div>
+
+            <div id="visualization">
+                <div class="viz-panel">
+                    <canvas id="target-canvas" width="360" height="140"></canvas>
+                </div>
+                <div class="viz-panel center">
+                    <canvas id="match-canvas" width="180" height="180"></canvas>
+                </div>
+                <div class="viz-panel">
+                    <canvas id="recorded-canvas" width="360" height="140"></canvas>
+                </div>
+            </div>
+
+            <div id="controls">
+                <button id="record-btn">Record</button>
+                <button id="play-target" class="hidden">Play Target</button>
+                <button id="play-recorded" class="hidden">Play Back</button>
+                <button id="confirm-btn" class="hidden">Confirm Sound</button>
+                <button id="next-btn" class="hidden">Next Round</button>
+            </div>
+
+            <div id="score-display">
+                <span id="score">0</span> matched out of <span id="total">0</span> rounds
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/meyda/dist/web/meyda.min.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/visualizer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
