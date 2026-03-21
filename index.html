@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaTrust Bank</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0f1e;
+      color: #e8eaf0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: #4f8ef7; }
+    nav small { color: #6b7280; font-size: 0.78rem; }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .card {
+      background: #131929;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 44px 48px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+
+    /* ── FORM ── */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #9ca3af;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0d1321;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #e8eaf0;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #4f8ef7; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: #374151;
+      font-size: 0.75rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* ── AUDIO AUTH BOX ── */
+    .audio-box {
+      background: #0d1321;
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .audio-box-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .mic-icon {
+      width: 36px; height: 36px;
+      background: rgba(79,142,247,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+
+    .audio-box h3 { font-size: 0.95rem; font-weight: 600; }
+    .audio-box p {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    /* ── WAVEFORM ── */
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+    .waveform .bar {
+      width: 5px;
+      border-radius: 3px;
+      background: #4f8ef7;
+      transition: height 0.1s ease, opacity 0.3s;
+      opacity: 0.3;
+    }
+
+    /* ── TONE BUTTONS ── */
+    .tone-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tone-btn {
+      padding: 12px 6px;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      background: #131929;
+      color: #e8eaf0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .tone-btn .note-icon { font-size: 1.2rem; }
+    .tone-btn:hover { border-color: #4f8ef7; background: rgba(79,142,247,0.1); }
+    .tone-btn.active { border-color: #4f8ef7; background: rgba(79,142,247,0.2); transform: scale(0.96); }
+    .tone-btn.correct { border-color: #10b981; background: rgba(16,185,129,0.15); }
+    .tone-btn.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.15); }
+    .tone-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── SEQUENCE DISPLAY ── */
+    .sequence-display {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      min-height: 28px;
+    }
+    .seq-dot {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .seq-dot.filled { background: #4f8ef7; border-color: #4f8ef7; color: #fff; }
+    .seq-dot.playing { background: #f59e0b; border-color: #f59e0b; animation: pulse 0.4s ease; }
+    .seq-dot.matched { background: #10b981; border-color: #10b981; }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #4f8ef7;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #3b7de3; }
+    .btn-primary:disabled { background: #1e2d4a; color: #4b5563; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .btn-ghost:hover { border-color: #4f8ef7; color: #4f8ef7; }
+
+    /* ── STATUS MESSAGE ── */
+    .status-msg {
+      font-size: 0.8rem;
+      text-align: center;
+      min-height: 20px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    .status-msg.error   { color: #ef4444; }
+    .status-msg.success { color: #10b981; }
+    .status-msg.info    { color: #f59e0b; }
+
+    /* ── STEP INDICATORS ── */
+    .steps {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+    .step {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.07);
+      transition: background 0.3s;
+    }
+    .step.done { background: #10b981; }
+    .step.active { background: #4f8ef7; }
+
+    /* ── DASHBOARD (post-login) ── */
+    #dashboard { display: none; }
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+    .dash-header h2 { font-size: 1.3rem; font-weight: 700; }
+    .dash-header p  { font-size: 0.8rem; color: #6b7280; margin-top: 2px; }
+    .balance-card {
+      background: linear-gradient(135deg, #1a2744, #0f1a33);
+      border: 1px solid rgba(79,142,247,0.3);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .balance-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    .balance-amount { font-size: 2.4rem; font-weight: 800; margin: 6px 0; }
+    .balance-sub { font-size: 0.8rem; color: #4f8ef7; }
+    .tx-list { list-style: none; }
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-name { font-size: 0.9rem; font-weight: 500; }
+    .tx-date { font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
+    .tx-amt  { font-size: 0.95rem; font-weight: 700; }
+    .tx-amt.credit { color: #10b981; }
+    .tx-amt.debit  { color: #ef4444; }
+
+    #logout-btn {
+      width: auto;
+      padding: 8px 18px;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Nova<span>Trust</span></div>
+  <small>Secure Online Banking</small>
+</nav>
+
+<main>
+
+  <!-- ── LOGIN CARD ── -->
+  <div class="card" id="login-card">
+    <div class="card-title">Sign in</div>
+    <div class="card-sub">Welcome back. Please authenticate to continue.</div>
+
+    <div class="steps">
+      <div class="step active"  id="step1"></div>
+      <div class="step"         id="step2"></div>
+      <div class="step"         id="step3"></div>
+    </div>
+
+    <label for="username">Account ID</label>
+    <input type="text" id="username" placeholder="e.g. NT-4821930" autocomplete="off" />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="••••••••" />
+
+    <div class="divider">Audio Authentication Required</div>
+
+    <div class="audio-box">
+      <div class="audio-box-header">
+        <div class="mic-icon">🔊</div>
+        <div>
+          <h3>Sound Matching</h3>
+        </div>
+      </div>
+      <p>Listen to the tone sequence, then tap the matching tones in the same order to verify it's you.</p>
+
+      <!-- Sequence dots -->
+      <div class="sequence-display" id="seq-display"></div>
+
+      <!-- Animated waveform -->
+      <div class="waveform" id="waveform"></div>
+
+      <!-- Play button -->
+      <button class="btn btn-ghost" id="play-btn" onclick="startAudioAuth()">▶ Play Authentication Tone</button>
+
+      <!-- Tone buttons -->
+      <div class="tone-grid" id="tone-grid"></div>
+
+      <div class="status-msg" id="audio-status"></div>
+    </div>
+
+    <button class="btn btn-primary" id="login-btn" onclick="submitLogin()" disabled>Sign In</button>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="card" id="dashboard">
+    <div class="dash-header">
+      <div>
+        <h2>Good morning 👋</h2>
+        <p id="dash-user"></p>
+      </div>
+      <button class="btn btn-ghost" id="logout-btn" onclick="logout()">Log out</button>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-label">Total Balance</div>
+      <div class="balance-amount">$24,816.50</div>
+      <div class="balance-sub">NovaTrust Checking ····3847</div>
+    </div>
+
+    <div style="font-size:0.8rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Recent Transactions</div>
+    <ul class="tx-list">
+      <li class="tx-item">
+        <div><div class="tx-name">Direct Deposit — Employer</div><div class="tx-date">Mar 20, 2026</div></div>
+        <div class="tx-amt credit">+$3,250.00</div>
+      </li>
+      <li class="tx-item">
+        <div><div class="tx-name">Amazon.com</div><div class="tx-date">Mar 19, 2026</div></div>
+        <div class="tx-amt debit">−$67.43</div>
+      </li>
+      <li class="tx-item">
+        <div><div class="tx-name">Netflix</div><div class="tx-date">Mar 18, 2026</div></div>
+        <div class="tx-amt debit">−$15.99</div>
+      </li>
+      <li class="tx-item">
+        <div><div class="tx-name">Transfer from Savings</div><div class="tx-date">Mar 17, 2026</div></div>
+        <div class="tx-amt credit">+$500.00</div>
+      </li>
+      <li class="tx-item">
+        <div><div class="tx-name">Whole Foods Market</div><div class="tx-date">Mar 16, 2026</div></div>
+        <div class="tx-amt debit">−$112.08</div>
+      </li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+  // ── Audio context ──
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  // ── Tone definitions ──
+  const TONES = [
+    { id: 'A', label: 'Low',     icon: '🔵', freq: 220 },
+    { id: 'B', label: 'Mid-Low', icon: '🟢', freq: 330 },
+    { id: 'C', label: 'Mid-Hi',  icon: '🟡', freq: 440 },
+    { id: 'D', label: 'High',    icon: '🔴', freq: 587 },
+  ];
+
+  const SEQ_LEN = 4;
+  let sequence      = [];   // correct sequence
+  let userSequence  = [];
+  let authPassed    = false;
+  let isPlaying     = false;
+
+  // ── Build tone grid ──
+  const grid = document.getElementById('tone-grid');
+  TONES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className   = 'tone-btn';
+    btn.id          = 'tone-' + t.id;
+    btn.disabled    = true;
+    btn.innerHTML   = `<span class="note-icon">${t.icon}</span>${t.label}`;
+    btn.onclick     = () => handleTonePress(t);
+    grid.appendChild(btn);
+  });
+
+  // ── Build waveform bars ──
+  const waveform = document.getElementById('waveform');
+  const barCount = 24;
+  for (let i = 0; i < barCount; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = '8px';
+    waveform.appendChild(bar);
+  }
+
+  // ── Generate random sequence ──
+  function generateSequence() {
+    sequence = [];
+    for (let i = 0; i < SEQ_LEN; i++) {
+      sequence.push(TONES[Math.floor(Math.random() * TONES.length)]);
+    }
+  }
+
+  // ── Render sequence dots ──
+  function renderDots(state) {
+    const display = document.getElementById('seq-display');
+    display.innerHTML = '';
+    for (let i = 0; i < SEQ_LEN; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'seq-dot';
+      if (state === 'playing' && i < sequence.length) {
+        dot.textContent = sequence[i].id;
+      }
+      display.appendChild(dot);
+    }
+  }
+
+  // ── Animate waveform ──
+  let waveInterval = null;
+  function startWave() {
+    const bars = waveform.querySelectorAll('.bar');
+    bars.forEach(b => b.style.opacity = '1');
+    waveInterval = setInterval(() => {
+      bars.forEach(b => {
+        const h = 6 + Math.random() * 36;
+        b.style.height = h + 'px';
+      });
+    }, 80);
+  }
+  function stopWave() {
+    clearInterval(waveInterval);
+    const bars = waveform.querySelectorAll('.bar');
+    bars.forEach(b => { b.style.height = '8px'; b.style.opacity = '0.3'; });
+  }
+
+  // ── Play a single tone ──
+  function playTone(freq, duration = 0.4) {
+    const ctx = getCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration - 0.02);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  // ── Play a "success" chime ──
+  function playSuccess() {
+    [523, 659, 784].forEach((f, i) => {
+      setTimeout(() => playTone(f, 0.3), i * 180);
+    });
+  }
+
+  // ── Play the authentication sequence ──
+  async function startAudioAuth() {
+    if (isPlaying) return;
+    isPlaying = true;
+
+    generateSequence();
+    userSequence = [];
+    authPassed   = false;
+    setToneButtons(false, true);
+    updateStatus('', '');
+
+    const playBtn = document.getElementById('play-btn');
+    playBtn.disabled   = true;
+    playBtn.textContent = '🔊 Playing…';
+
+    renderDots('playing');
+    startWave();
+
+    const dots = document.getElementById('seq-display').querySelectorAll('.seq-dot');
+
+    for (let i = 0; i < sequence.length; i++) {
+      dots[i].classList.add('playing');
+      playTone(sequence[i].freq, 0.5);
+      await sleep(700);
+      dots[i].classList.remove('playing');
+      dots[i].classList.add('filled');
+    }
+
+    stopWave();
+    await sleep(300);
+
+    // Hide labels from dots (challenge mode)
+    dots.forEach(d => { d.textContent = ''; });
+
+    playBtn.textContent = '↺ Replay Tone';
+    playBtn.disabled    = false;
+    isPlaying           = false;
+
+    // Enable tone buttons for user input
+    setToneButtons(true, false);
+    updateStep(2);
+    updateStatus('Now match the sequence — tap the tones in order.', 'info');
+    renderUserDots();
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // ── Enable / disable tone buttons ──
+  function setToneButtons(enabled) {
+    TONES.forEach(t => {
+      document.getElementById('tone-' + t.id).disabled = !enabled;
+    });
+  }
+
+  // ── Handle a tone press ──
+  function handleTonePress(tone) {
+    if (authPassed) return;
+    playTone(tone.freq, 0.3);
+
+    const btn = document.getElementById('tone-' + tone.id);
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 200);
+
+    userSequence.push(tone);
+    renderUserDots();
+
+    // Check so far
+    const idx = userSequence.length - 1;
+    if (userSequence[idx].id !== sequence[idx].id) {
+      // Wrong!
+      btn.classList.add('wrong');
+      setTimeout(() => btn.classList.remove('wrong'), 600);
+      updateStatus('Incorrect sequence. Listen again and retry.', 'error');
+      setToneButtons(false);
+      userSequence = [];
+      setTimeout(() => { renderUserDots(); setToneButtons(true); updateStatus('Try again — match the sequence.', 'info'); }, 900);
+      return;
+    }
+
+    if (userSequence.length === SEQ_LEN) {
+      // Full match!
+      authPassed = true;
+      setToneButtons(false);
+      playSuccess();
+      markDotsMatched();
+      updateStatus('✓ Audio authentication successful!', 'success');
+      updateStep(3);
+      document.getElementById('login-btn').disabled = false;
+    }
+  }
+
+  // ── Render user progress dots ──
+  function renderUserDots() {
+    const dots = document.getElementById('seq-display').querySelectorAll('.seq-dot');
+    dots.forEach((d, i) => {
+      d.classList.remove('filled', 'matched');
+      if (i < userSequence.length) {
+        d.textContent = userSequence[i].id;
+        d.classList.add('filled');
+      } else {
+        d.textContent = '';
+      }
+    });
+  }
+
+  function markDotsMatched() {
+    document.getElementById('seq-display').querySelectorAll('.seq-dot').forEach(d => {
+      d.classList.add('matched');
+    });
+  }
+
+  // ── Status text ──
+  function updateStatus(msg, type) {
+    const el = document.getElementById('audio-status');
+    el.textContent  = msg;
+    el.className    = 'status-msg ' + type;
+  }
+
+  // ── Step indicator ──
+  function updateStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('step' + i);
+      el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+    }
+  }
+
+  // ── Submit login ──
+  function submitLogin() {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value;
+    if (!user || !pass) { updateStatus('Please enter your Account ID and password.', 'error'); return; }
+    if (!authPassed)    { updateStatus('Complete audio authentication first.', 'error'); return; }
+
+    document.getElementById('login-btn').textContent = 'Authenticating…';
+    setTimeout(() => {
+      document.getElementById('login-card').style.display = 'none';
+      document.getElementById('dashboard').style.display  = 'block';
+      document.getElementById('dash-user').textContent    = 'Account: ' + user;
+    }, 800);
+  }
+
+  // ── Logout ──
+  function logout() {
+    document.getElementById('dashboard').style.display  = 'none';
+    document.getElementById('login-card').style.display = 'block';
+    document.getElementById('username').value  = '';
+    document.getElementById('password').value  = '';
+    document.getElementById('login-btn').textContent = 'Sign In';
+    document.getElementById('login-btn').disabled    = true;
+    authPassed   = false;
+    userSequence = [];
+    sequence     = [];
+    setToneButtons(false);
+    updateStatus('', '');
+    updateStep(1);
+    renderDots('empty');
+    document.getElementById('play-btn').textContent = '▶ Play Authentication Tone';
+    document.getElementById('play-btn').disabled    = false;
+  }
+
+  // ── Init ──
+  renderDots('empty');
+</script>
+
+</body>
+</html>
