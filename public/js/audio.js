@@ -9,6 +9,7 @@ class AudioEngine {
         this.recordedChunks = [];
         this.liveSource = null;
         this.liveAnalyser = null;
+        this.lastRecordingBlob = null;
     }
 
     async init() {
@@ -60,6 +61,7 @@ class AudioEngine {
             this.mediaRecorder.onstop = async () => {
                 try {
                     const blob = new Blob(this.recordedChunks, { type: this.mediaRecorder.mimeType });
+                    this.lastRecordingBlob = blob;
                     const arrayBuffer = await blob.arrayBuffer();
                     this.recordedBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
                     if (this.liveSource) this.liveSource.disconnect();
@@ -745,5 +747,22 @@ class AudioEngine {
             tonality:   Math.exp(-flatDiff * 5),
             texture:    Math.exp(-zcrDiff * 3),
         };
+    }
+
+    // ================================================================
+    //  NETWORK HELPERS — blob export/import for multiplayer
+    // ================================================================
+
+    async getRecordingArrayBuffer() {
+        if (!this.lastRecordingBlob) return null;
+        return this.lastRecordingBlob.arrayBuffer();
+    }
+
+    async decodeBlob(arrayBuffer) {
+        if (!this.audioContext) await this.init();
+        const copy = arrayBuffer instanceof ArrayBuffer
+            ? arrayBuffer.slice(0)
+            : new Uint8Array(arrayBuffer).buffer;
+        return this.audioContext.decodeAudioData(copy);
     }
 }

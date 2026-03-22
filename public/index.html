@@ -3,27 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sound Match</title>
+    <title>Audio Tennis</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>Sound Match</h1>
-            <p class="subtitle">Record a sound. Challenge your friend to match it.</p>
+            <h1>Audio Tennis</h1>
+            <p class="subtitle">Take turns setting and matching sounds</p>
         </header>
 
-        <div id="setup" class="screen">
-            <p class="setup-desc">Player 1 records a mystery sound. Player 2 tries to match it.</p>
-            <div id="loading-status" class="hidden">Loading sound model (first time only)...</div>
-            <button id="start-btn">Start Game</button>
+        <!-- LOBBY -->
+        <div id="screen-lobby" class="screen">
+            <div class="lobby-box">
+                <input id="player-name" type="text" placeholder="Your name" maxlength="20" autocomplete="off">
+                <button id="create-btn" class="btn-primary">Create Game</button>
+                <div class="divider"><span>or join</span></div>
+                <div class="join-row">
+                    <input id="join-code" type="text" placeholder="Code" maxlength="4" autocomplete="off">
+                    <button id="join-btn" class="btn-accent">Join</button>
+                </div>
+                <div id="lobby-error" class="error-text"></div>
+                <div id="clap-status" class="model-status">Loading sound model...</div>
+            </div>
         </div>
 
-        <div id="game" class="screen hidden">
+        <!-- GAME -->
+        <div id="screen-game" class="screen hidden">
+            <div id="game-header">
+                <span id="game-code-display" class="game-code-small"></span>
+                <div id="game-status">
+                    <span id="round-display">Round 1</span>
+                    <span class="status-sep">&middot;</span>
+                    <span id="score-display">Score: 0</span>
+                </div>
+            </div>
+
             <div id="turn-banner">
-                <span id="player-label">Player 1</span>
-                <span id="phase-label">Record a sound</span>
+                <span id="player-label">WAITING</span>
+                <span id="phase-label">Loading...</span>
             </div>
 
             <div id="visualization">
@@ -44,15 +63,13 @@
             </div>
 
             <div id="controls">
-                <button id="record-btn">Record</button>
+                <button id="record-btn" class="hidden">Record</button>
                 <button id="play-target" class="hidden">Play Target</button>
                 <button id="play-recorded" class="hidden">Play Back</button>
                 <button id="confirm-btn" class="hidden">Confirm Sound</button>
                 <button id="next-btn" class="hidden">Next Round</button>
-            </div>
-
-            <div id="score-display">
-                <span id="score">0</span> matched out of <span id="total">0</span> rounds
+                <button id="refresh-btn" class="hidden">Check for updates</button>
+                <button id="share-btn" class="hidden">Share Code</button>
             </div>
         </div>
     </div>
@@ -62,6 +79,6 @@
     <script type="module" src="js/clap.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/visualizer.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/game.js"></script>
 </body>
 </html>
