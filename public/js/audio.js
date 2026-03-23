@@ -49,6 +49,9 @@ class AudioEngine {
         };
         this.mediaRecorder.start();
         this.isRecording = true;
+        this._autoStopTimer = setTimeout(() => {
+            if (this.isRecording && this.onAutoStop) this.onAutoStop();
+        }, 5000);
         this.liveSource = this.audioContext.createMediaStreamSource(this.mediaStream);
         this.liveAnalyser = this.audioContext.createAnalyser();
         this.liveAnalyser.fftSize = 256;
@@ -57,6 +60,7 @@ class AudioEngine {
 
     async stopRecording() {
         if (!this.isRecording) return null;
+        clearTimeout(this._autoStopTimer);
         return new Promise((resolve, reject) => {
             this.mediaRecorder.onstop = async () => {
                 try {

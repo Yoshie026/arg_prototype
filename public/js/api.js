@@ -1,29 +1,93 @@
 /**
- * REST API client for Audio Tennis.
+ * REST API client for Sound Tennis.
  * Stores per-game tokens in localStorage for async rejoining.
  */
 class Api {
     constructor() {
         this.token = null;
         this.gameCode = null;
+        this.storageKey = 'sound-tennis';
+        this.legacyStorageKey = 'audio-tennis';
+    }
+
+    getStoredGames() {
+        const nextRaw = localStorage.getItem(this.storageKey);
+        if (nextRaw !== null) {
+            try {
+                const parsed = JSON.parse(nextRaw);
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch {
+                return {};
+            }
+        }
+
+        const legacyRaw = localStorage.getItem(this.legacyStorageKey);
+        if (!legacyRaw) return {};
+        try {
+            const legacy = JSON.parse(legacyRaw);
+            if (legacy && typeof legacy === 'object') {
+                localStorage.setItem(this.storageKey, JSON.stringify(legacy));
+                localStorage.removeItem(this.legacyStorageKey);
+                return legacy;
+            }
+        } catch {}
+        return {};
+    }
+
+    setStoredGames(games) {
+        localStorage.setItem(this.storageKey, JSON.stringify(games));
+        // Keep one canonical key to prevent legacy data from reappearing.
+        localStorage.removeItem(this.legacyStorageKey);
     }
 
     setCredentials(code, token) {
         this.gameCode = code;
         this.token = token;
-        const games = JSON.parse(localStorage.getItem('audio-tennis') || '{}');
-        games[code] = token;
-        localStorage.setItem('audio-tennis', JSON.stringify(games));
+        const games = this.getStoredGames();
+        const existing = games[code];
+        // Preserve any saved metadata
+        if (existing && typeof existing === 'object') {
+            existing.token = token;
+        } else {
+            games[code] = { token };
+        }
+        this.setStoredGames(games);
     }
 
     loadCredentials(code) {
-        const games = JSON.parse(localStorage.getItem('audio-tennis') || '{}');
-        if (games[code]) {
-            this.gameCode = code;
-            this.token = games[code];
-            return true;
-        }
-        return false;
+        const games = this.getStoredGames();
+        const entry = games[code];
+        if (!entry) return false;
+        this.gameCode = code;
+        this.token = typeof entry === 'string' ? entry : entry.token;
+        return true;
+    }
+
+    removeCredentials(code) {
+        const games = this.getStoredGames();
+        delete games[code];
+        this.setStoredGames(games);
+    }
+
+    saveGameInfo(code, info) {
+        const games = this.getStoredGames();
+        const entry = games[code];
+        if (!entry) return;
+        const token = typeof entry === 'string' ? entry : entry.token;
+        games[code] = { token, ...info };
+        this.setStoredGames(games);
+    }
+
+    getGameInfo(code) {
+        const games = this.getStoredGames();
+        const entry = games[code];
+        if (!entry) return null;
+        if (typeof entry === 'string') return { token: entry };
+        return entry;
+    }
+
+    getAllGameCodes() {
+        return Object.keys(this.getStoredGames());
     }
 
     authHeaders(extra = {}) {

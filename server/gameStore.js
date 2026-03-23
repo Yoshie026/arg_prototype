@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+const { Pool } = require('pg');
 const crypto = require('crypto');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const GAMES_DIR = path.join(DATA_DIR, 'games');
-const AUDIO_DIR = path.join(DATA_DIR, 'audio');
-
-fs.mkdirSync(GAMES_DIR, { recursive: true });
-fs.mkdirSync(AUDIO_DIR, { recursive: true });
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+});
 
 function generateCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -16,22 +13,31 @@ function generateCode() {
     return code;
 }
 
-function gamePath(code) {
-    return path.join(GAMES_DIR, `${code}.json`);
+function rowToGame(row) {
+    return {
+        code: row.code,
+        state: row.state,
+        round: row.round,
+        players: {
+            creator: { name: row.creator_name, token: row.creator_token, score: row.creator_score },
+            joiner: row.joiner_name
+                ? { name: row.joiner_name, token: row.joiner_token, score: row.joiner_score }
+                : null,
+        },
+        currentSetter: row.current_setter,
+        targetLocation: row.target_location,
+        attempts: row.attempts || [],
+        createdAt: row.created_at,
+    };
 }
 
-function audioPath(code, round, type) {
-    return path.join(AUDIO_DIR, `${code}_r${round}_${type}.webm`);
-}
-
-function loadGame(code) {
-    const p = gamePath(code);
-    if (!fs.existsSync(p)) return null;
-    return JSON.parse(fs.readFileSync(p, 'utf-8'));
-}
-
-function saveGame(game) {
-    fs.writeFileSync(gamePath(game.code), JSON.stringify(game, null, 2));
+async function loadGame(code) {
+    const { rows } = await pool.query(
+        'SELECT code, state, round, creator_name, creator_token, creator_score, joiner_name, joiner_token, joiner_score, current_setter, target_location, attempts, created_at FROM games WHERE code = $1',
+        [code]
+    );
+    if (rows.length === 0) return null;
+    return rowToGame(rows[0]);
 }
 
 function getRole(game, token) {
@@ -40,121 +46,125 @@ function getRole(game, token) {
     return null;
 }
 
-function createGame(playerName) {
-    let code;
-    do { code = generateCode(); } while (fs.existsSync(gamePath(code)));
-
+async function createGame(playerName) {
     const token = crypto.randomUUID();
-    const game = {
-        code,
-        state: 'waiting',
-        round: 1,
-        players: {
-            creator: { name: playerName, token, score: 0 },
-            joiner: null,
-        },
-        currentSetter: 'creator',
-        targetLocation: null,
-        attempts: [],
-        createdAt: new Date().toISOString(),
-    };
-    saveGame(game);
+    let code;
+
+    for (let i = 0; i < 10; i++) {
+        code = generateCode();
+        try {
+            await pool.query(
+                'INSERT INTO games (code, creator_name, creator_token) VALUES ($1, $2, $3)',
+                [code, playerName, token]
+            );
+            break;
+        } catch (err) {
+            if (err.code === '23505' && i < 9) continue;
+            throw err;
+        }
+    }
+
+    const game = await loadGame(code);
     return { game, token };
 }
 
-function joinGame(code, playerName) {
-    const game = loadGame(code);
+async function joinGame(code, playerName) {
+    const game = await loadGame(code);
     if (!game) return { error: 'Game not found' };
     if (game.players.joiner) return { error: 'Game is full' };
 
     const token = crypto.randomUUID();
-    game.players.joiner = { name: playerName, token, score: 0 };
-    game.state = 'setting';
-    saveGame(game);
-    return { game, token };
+    await pool.query(
+        `UPDATE games SET joiner_name = $1, joiner_token = $2, state = 'setting' WHERE code = $3`,
+        [playerName, token, code]
+    );
+
+    const updated = await loadGame(code);
+    return { game: updated, token };
 }
 
-function uploadTarget(code, token, audioBuffer, location) {
-    const game = loadGame(code);
+async function uploadTarget(code, token, audioBuffer, location) {
+    const game = await loadGame(code);
     if (!game) return { error: 'Game not found' };
 
     const role = getRole(game, token);
     if (!role) return { error: 'Not a player in this game' };
     if (role !== game.currentSetter) return { error: 'Not your turn to set' };
-    if (game.state !== 'setting') return { error: 'Not in setting phase' };
+    if (game.state !== 'setting') return { game }; // already moved on
 
-    const p = audioPath(code, game.round, 'target');
-    fs.writeFileSync(p, Buffer.from(audioBuffer));
+    await pool.query(
+        `UPDATE games SET target_audio = $1, target_location = $2, state = 'matching', attempts = '[]'::jsonb, attempt_audio = NULL WHERE code = $3`,
+        [audioBuffer, location ? JSON.stringify(location) : null, code]
+    );
 
-    game.targetLocation = location || null;
-    game.state = 'matching';
-    game.attempts = [];
-    saveGame(game);
-    return { game };
+    const updated = await loadGame(code);
+    return { game: updated };
 }
 
-function getTargetAudioPath(code, round) {
-    const p = audioPath(code, round, 'target');
-    return fs.existsSync(p) ? p : null;
+async function getTargetAudio(code) {
+    const { rows } = await pool.query('SELECT target_audio FROM games WHERE code = $1', [code]);
+    if (rows.length === 0 || !rows[0].target_audio) return null;
+    return rows[0].target_audio;
 }
 
-function getAttemptAudioPath(code, round) {
-    const p = audioPath(code, round, 'attempt');
-    return fs.existsSync(p) ? p : null;
+async function getAttemptAudio(code) {
+    const { rows } = await pool.query('SELECT attempt_audio FROM games WHERE code = $1', [code]);
+    if (rows.length === 0 || !rows[0].attempt_audio) return null;
+    return rows[0].attempt_audio;
 }
 
-function reportMatch(code, token, score, audioBuffer) {
-    const game = loadGame(code);
+async function reportMatch(code, token, score, audioBuffer) {
+    const game = await loadGame(code);
     if (!game) return { error: 'Game not found' };
 
     const role = getRole(game, token);
     if (!role) return { error: 'Not a player in this game' };
     if (role === game.currentSetter) return { error: 'Not your turn to match' };
-    if (game.state !== 'matching') return { error: 'Not in matching phase' };
+    if (game.state !== 'matching') return { game, matched: game.state === 'matched' }; // already moved on
 
-    // Store attempt audio so the setter can listen
-    if (audioBuffer && audioBuffer.length > 0) {
-        const p = audioPath(code, game.round, 'attempt');
-        fs.writeFileSync(p, Buffer.from(audioBuffer));
-    }
-
-    const matched = score >= 0.85;
-
-    game.attempts.push({
-        score,
-        matched,
-        timestamp: new Date().toISOString(),
-    });
+    const matched = score >= 0.8;
+    const attempts = [...game.attempts, { score, matched, timestamp: new Date().toISOString() }];
 
     if (matched) {
-        game.players.creator.score++;
-        game.players.joiner.score++;
-        game.state = 'matched';
+        await pool.query(
+            `UPDATE games SET attempts = $1, attempt_audio = $2, state = 'matched',
+             creator_score = creator_score + 1, joiner_score = joiner_score + 1 WHERE code = $3`,
+            [JSON.stringify(attempts), audioBuffer, code]
+        );
+    } else {
+        await pool.query(
+            'UPDATE games SET attempts = $1, attempt_audio = $2 WHERE code = $3',
+            [JSON.stringify(attempts), audioBuffer, code]
+        );
     }
 
-    saveGame(game);
-    return { game, matched };
+    const updated = await loadGame(code);
+    return { game: updated, matched };
 }
 
-function nextRound(code, token) {
-    const game = loadGame(code);
+async function nextRound(code, token) {
+    const game = await loadGame(code);
     if (!game) return { error: 'Game not found' };
 
     const role = getRole(game, token);
     if (!role) return { error: 'Not a player in this game' };
-    if (game.state !== 'matched') return { error: 'Round not complete' };
+    if (game.state !== 'matched') return { game }; // already moved on
 
-    game.currentSetter = game.currentSetter === 'creator' ? 'joiner' : 'creator';
-    game.round++;
-    game.state = 'setting';
-    game.targetLocation = null;
-    game.attempts = [];
-    saveGame(game);
-    return { game };
+    const newSetter = game.currentSetter === 'creator' ? 'joiner' : 'creator';
+
+    await pool.query(
+        `UPDATE games SET current_setter = $1, round = round + 1, state = 'setting',
+         target_location = NULL, target_audio = NULL, attempt_audio = NULL, attempts = '[]'::jsonb
+         WHERE code = $2`,
+        [newSetter, code]
+    );
+
+    const updated = await loadGame(code);
+    return { game: updated };
 }
 
 module.exports = {
     loadGame, createGame, joinGame, getRole,
-    getTargetAudioPath, getAttemptAudioPath,
+    getTargetAudio, getAttemptAudio,
     uploadTarget, reportMatch, nextRound,
 };

@@ -3,80 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Tennis</title>
+    <title>Sound Tennis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
     <div id="app">
-        <header>
-            <h1>Audio Tennis</h1>
-            <p class="subtitle">Take turns setting and matching sounds</p>
-        </header>
 
         <!-- LOBBY -->
         <div id="screen-lobby" class="screen">
+            <h1>Sound Tennis</h1>
             <div class="lobby-box">
                 <input id="player-name" type="text" placeholder="Your name" maxlength="20" autocomplete="off">
-                <button id="create-btn" class="btn-primary">Create Game</button>
-                <div class="divider"><span>or join</span></div>
+                <button id="create-btn" class="btn-primary">New game</button>
+                <div class="divider"><span>or join one</span></div>
                 <div class="join-row">
                     <input id="join-code" type="text" placeholder="Code" maxlength="4" autocomplete="off">
-                    <button id="join-btn" class="btn-accent">Join</button>
+                    <button id="join-btn" class="btn-outline">Join</button>
                 </div>
-                <div id="lobby-error" class="error-text"></div>
-                <div id="clap-status" class="model-status">Loading sound model...</div>
+                <p id="lobby-error" class="error-text"></p>
             </div>
+            <div id="my-games"></div>
+            <p id="clap-status" class="clap-status">Loading sound model...</p>
         </div>
 
         <!-- GAME -->
         <div id="screen-game" class="screen hidden">
-            <div id="game-header">
-                <span id="game-code-display" class="game-code-small"></span>
-                <div id="game-status">
-                    <span id="round-display">Round 1</span>
-                    <span class="status-sep">&middot;</span>
-                    <span id="score-display">Score: 0</span>
-                </div>
+            <div class="game-bar">
+                <button id="back-btn">&larr;</button>
+                <span id="game-meta"></span>
             </div>
 
-            <div id="turn-banner">
-                <span id="player-label">WAITING</span>
-                <span id="phase-label">Loading...</span>
+            <div id="game-code-area" class="hidden">
+                <span id="game-code-big"></span>
+                <button id="copy-code">Copy</button>
             </div>
 
-            <div id="visualization">
-                <div class="viz-panel">
-                    <canvas id="target-canvas" width="360" height="140"></canvas>
-                </div>
-                <div class="viz-panel center">
-                    <canvas id="match-canvas" width="180" height="180"></canvas>
-                </div>
-                <div class="viz-panel">
-                    <canvas id="recorded-canvas" width="360" height="140"></canvas>
-                </div>
+            <p id="status-msg">Loading...</p>
+
+            <div id="score-area" class="hidden">
+                <span id="score-value"></span>
+                <span id="score-label"></span>
             </div>
+
+            <div id="target-viz" class="viz-box hidden">
+                <span class="viz-label">Target</span>
+                <canvas id="target-canvas" width="480" height="100"></canvas>
+            </div>
+
+            <div id="recorded-viz" class="viz-box hidden">
+                <span class="viz-label">Your attempt</span>
+                <canvas id="recorded-canvas" width="480" height="100"></canvas>
+            </div>
+
+            <canvas id="match-canvas" width="1" height="1" class="hidden"></canvas>
 
             <div id="location-section" class="hidden">
                 <div id="location-label"></div>
                 <div id="map"></div>
             </div>
 
-            <div id="controls">
+            <div id="actions">
                 <button id="record-btn" class="hidden">Record</button>
-                <button id="play-target" class="hidden">Play Target</button>
-                <button id="play-recorded" class="hidden">Play Back</button>
-                <button id="confirm-btn" class="hidden">Confirm Sound</button>
-                <button id="next-btn" class="hidden">Next Round</button>
-                <button id="refresh-btn" class="hidden">Check for updates</button>
-                <button id="share-btn" class="hidden">Share Code</button>
+                <button id="play-target" class="hidden">Play target</button>
+                <button id="play-recorded" class="hidden">Play back</button>
+                <button id="confirm-btn" class="hidden">Send</button>
+                <button id="next-btn" class="hidden">Next round</button>
             </div>
         </div>
     </div>
+    <canvas id="side-motif" aria-hidden="true"></canvas>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/meyda/dist/web/meyda.min.js"></script>
     <script type="module" src="js/clap.js"></script>
+    <script src="js/demo.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/visualizer.js"></script>
     <script type="module" src="js/game.js"></script>
