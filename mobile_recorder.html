@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <title>Memo</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f7;
+      --border: #ebebeb;
+      --text: #0a0a0a;
+      --text-sub: #999999;
+      --red: #ff3b30;
+      --green: #34c759;
+      --tab-h: 72px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout */
+    #app {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .safe-top { height: max(env(safe-area-inset-top), 48px); flex-shrink: 0; }
+
+    .panes {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pane {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+    }
+    .pane.active { display: flex; }
+
+    /* ── RECORD PANE ── */
+    #pane-record {
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px 28px;
+    }
+
+    .rec-top {
+      width: 100%;
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    .rec-status {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .rec-status.live { color: var(--red); }
+
+    .rec-timer {
+      font-size: 68px;
+      font-weight: 200;
+      letter-spacing: -3px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .rec-limit {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Waveform */
+    .waveform-wrap {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      min-height: 0;
+    }
+
+    #wave { width: 100%; height: 100px; display: block; }
+
+    /* Record button area */
+    .rec-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 88px;
+      height: 88px;
+    }
+
+    .ring-svg {
+      position: absolute;
+      inset: 0;
+      transform: rotate(-90deg);
+    }
+
+    .ring-track { fill: none; stroke: var(--border); stroke-width: 2.5; }
+    .ring-fill {
+      fill: none;
+      stroke: var(--red);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-dasharray: 245.04;
+      stroke-dashoffset: 245.04;
+      transition: stroke-dashoffset 0.1s linear;
+    }
+
+    /* Pulse rings */
+    .pulse-ring {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: 1.5px solid var(--red);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .pulse-ring.pulse-1 { animation: pulse 2s ease-out infinite; }
+    .pulse-ring.pulse-2 { animation: pulse 2s ease-out 0.6s infinite; }
+
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 0.5; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+
+    .pulse-ring { display: none; }
+    .recording .pulse-ring { display: block; }
+
+    #recBtn {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: none;
+      background: var(--red);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease;
+    }
+    #recBtn:active { transform: scale(0.92); }
+
+    .rec-dot {
+      width: 26px;
+      height: 26px;
+      background: white;
+      border-radius: 50%;
+      transition: border-radius 0.2s ease, width 0.2s ease, height 0.2s ease;
+    }
+
+    .recording .rec-dot {
+      border-radius: 5px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .rec-hint {
+      font-size: 11px;
+      color: var(--text-sub);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── CLIPS PANE ── */
+    #pane-clips { overflow: hidden; }
+
+    .pane-header {
+      padding: 20px 24px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .pane-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+    }
+    .pane-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 3px;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(var(--tab-h) + 8px);
+    }
+
+    .clip-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 14px;
+      transition: background 0.1s;
+    }
+    .clip-row:active { background: var(--surface); }
+
+    .play-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .play-btn.playing { background: var(--text); border-color: var(--text); }
+    .play-btn svg { transition: fill 0.15s; }
+    .play-btn.playing svg { fill: white; }
+
+    .clip-info { flex: 1; min-width: 0; }
+    .clip-name {
+      font-size: 15px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .clip-meta { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+    .mini-wave { width: 52px; height: 24px; flex-shrink: 0; }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .del-btn:hover { color: var(--red); }
+
+    /* ── STITCH PANE ── */
+    #pane-stitch { overflow: hidden; }
+
+    .stitch-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auto-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .auto-label { font-size: 15px; font-weight: 500; }
+    .auto-desc { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+    .ios-toggle {
+      width: 51px;
+      height: 31px;
+      background: var(--border);
+      border-radius: 100px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.22s ease;
+      flex-shrink: 0;
+    }
+    .ios-toggle.on { background: var(--green); }
+    .ios-toggle::after {
+      content: '';
+      position: absolute;
+      width: 27px; height: 27px;
+      background: white;
+      border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: left 0.22s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    .ios-toggle.on::after { left: 22px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      padding: 16px 24px 8px;
+    }
+
+    .stitch-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    .stitch-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      background: white;
+      cursor: grab;
+    }
+    .stitch-row.drag-over { background: var(--surface); }
+
+    .handle-icon { color: var(--border); flex-shrink: 0; }
+
+    .seq-num {
+      width: 26px;
+      height: 26px;
+      background: var(--surface);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Bottom controls */
+    .stitch-footer {
+      padding: 16px 24px;
+      padding-bottom: calc(var(--tab-h) + 16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .prog-row {
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    .prog-row.show { display: flex; }
+    .prog-track {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: var(--text);
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .prog-label { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
+
+    .compilations-section { display: none; margin-bottom: 4px; }
+    .compilations-section.show { display: block; }
+    .comp-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .comp-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .comp-row:last-child { border-bottom: none; }
+
+    .comp-play-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .comp-info { flex: 1; }
+    .comp-name { font-size: 14px; font-weight: 500; }
+    .comp-meta { font-size: 11px; color: var(--text-sub); margin-top: 1px; }
+    .comp-dl {
+      background: none; border: none;
+      color: var(--text-sub);
+      cursor: pointer;
+      display: flex; align-items: center;
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      border-radius: 100px;
+      border: none;
+      background: var(--text);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:active { opacity: 0.75; }
+    .btn-primary:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%;
+      height: 50px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-secondary:active { opacity: 0.6; }
+
+    /* ── TAB BAR ── */
+    .tab-bar {
+      height: var(--tab-h);
+      padding-bottom: max(env(safe-area-inset-bottom), 8px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #c0c0c0;
+      transition: color 0.15s;
+      position: relative;
+    }
+    .tab-btn.active { color: var(--text); }
+
+    .tab-btn svg { width: 22px; height: 22px; }
+    .tab-lbl { font-size: 10px; font-weight: 500; letter-spacing: 0.2px; }
+
+    .clips-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      min-width: 15px;
+      height: 15px;
+      background: var(--red);
+      color: white;
+      border-radius: 100px;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .clips-badge.show { opacity: 1; }
+
+    /* ── EMPTY STATES ── */
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      gap: 10px;
+    }
+    .empty-icon { font-size: 40px; opacity: 0.25; }
+    .empty-txt { font-size: 14px; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      top: max(env(safe-area-inset-top), 52px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(20,20,20,0.9);
+      color: white;
+      padding: 9px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="safe-top"></div>
+
+  <div class="panes">
+
+    <!-- ── RECORD ── -->
+    <div class="pane active" id="pane-record">
+      <div class="rec-top">
+        <div class="rec-status" id="recStatus">Ready</div>
+        <div class="rec-timer" id="recTimer">0:00</div>
+        <div class="rec-limit" id="recLimit">up to 30s</div>
+      </div>
+
+      <div class="waveform-wrap">
+        <canvas id="wave"></canvas>
+      </div>
+
+      <div class="rec-bottom">
+        <div class="ring-wrap" id="ringWrap">
+          <svg class="ring-svg" viewBox="0 0 88 88">
+            <circle class="ring-track" cx="44" cy="44" r="39"/>
+            <circle class="ring-fill" id="ringFill" cx="44" cy="44" r="39"/>
+          </svg>
+          <div class="pulse-ring pulse-1"></div>
+          <div class="pulse-ring pulse-2"></div>
+          <button id="recBtn">
+            <div class="rec-dot" id="recDot"></div>
+          </button>
+        </div>
+        <div class="rec-hint">or press the side button</div>
+      </div>
+    </div>
+
+    <!-- ── CLIPS ── -->
+    <div class="pane" id="pane-clips">
+      <div class="pane-header">
+        <div class="pane-title">Clips</div>
+        <div class="pane-sub" id="clipsSub">No clips yet</div>
+      </div>
+      <div class="scroll-area" id="clipsList">
+        <div class="empty" id="clipsEmpty">
+          <div class="empty-icon">◎</div>
+          <div class="empty-txt">Record something first</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STITCH ── -->
+    <div class="pane" id="pane-stitch">
+      <div class="pane-header">
+        <div class="pane-title">Stitch</div>
+        <div class="pane-sub" id="stitchSub">Combine your clips</div>
+      </div>
+      <div class="stitch-body">
+        <div class="auto-row">
+          <div>
+            <div class="auto-label">Auto-Stitch</div>
+            <div class="auto-desc">Compiles clips at 10 PM for review</div>
+          </div>
+          <div class="ios-toggle" id="autoToggle"></div>
+        </div>
+
+        <div class="section-label">Clip order</div>
+        <div class="stitch-list" id="stitchList">
+          <div class="empty" id="stitchEmpty">
+            <div class="empty-icon">◎</div>
+            <div class="empty-txt">No clips to stitch</div>
+          </div>
+        </div>
+
+        <div class="stitch-footer">
+          <div class="prog-row" id="progRow">
+            <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+            <div class="prog-label" id="progLabel">Processing…</div>
+          </div>
+
+          <div class="compilations-section" id="compSection">
+            <div class="comp-label">Compilations</div>
+            <div id="compList"></div>
+          </div>
+
+          <button class="btn-primary" id="stitchBtn" disabled>Stitch All Clips</button>
+          <button class="btn-secondary" id="clearBtn">Clear All Clips</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB BAR ── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-record" onclick="go('record')">
+      <div style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="11" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="9" y1="22" x2="15" y2="22"/>
+        </svg>
+        <span class="clips-badge" id="badge"></span>
+      </div>
+      <span class="tab-lbl">Record</span>
+    </button>
+
+    <button class="tab-btn" id="tab-clips" onclick="go('clips')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="6" y1="7" x2="6" y2="17"/>
+        <line x1="10" y1="4" x2="10" y2="20"/>
+        <line x1="14" y1="7" x2="14" y2="17"/>
+        <line x1="18" y1="9" x2="18" y2="15"/>
+        <line x1="20" y1="12" x2="22" y2="12"/>
+      </svg>
+      <span class="tab-lbl">Clips</span>
+    </button>
+
+    <button class="tab-btn" id="tab-stitch" onclick="go('stitch')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <span class="tab-lbl">Stitch</span>
+    </button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ──
+const MAX_SEC = 30;
+let clips = [];
+let compilations = [];
+let isRec = false;
+let timerInterval = null;
+let recStart = null;
+let mediaRec = null;
+let chunks = [];
+let stream = null;
+let analyser = null;
+let actx = null;
+let raf = null;
+let waveHistory = [];
+let lastSnapshot = [];
+let curAudio = null;
+let curPlayId = null;
+let autoStitch = false;
+let dragSrc = null;
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', () => {
+  initCanvas();
+  drawIdle();
+  window.addEventListener('resize', initCanvas);
+
+  // Side/volume button
+  document.addEventListener('keydown', e => {
+    if (['AudioVolumeUp','AudioVolumeDown'].includes(e.key) ||
+        e.keyCode === 175 || e.keyCode === 174) {
+      e.preventDefault();
+      toggleRec();
+    }
+  });
+
+  // Auto-stitch scheduler
+  setInterval(() => {
+    if (!autoStitch || clips.length === 0) return;
+    const n = new Date();
+    if (n.getHours() === 22 && n.getMinutes() === 0 && n.getSeconds() < 6) stitch();
+  }, 5000);
+
+  document.getElementById('recBtn').addEventListener('click', toggleRec);
+  document.getElementById('autoToggle').addEventListener('click', () => {
+    autoStitch = !autoStitch;
+    document.getElementById('autoToggle').classList.toggle('on', autoStitch);
+    toast(autoStitch ? 'Auto-Stitch on · 10 PM' : 'Auto-Stitch off');
+  });
+  document.getElementById('stitchBtn').addEventListener('click', stitch);
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
+});
+
+// ── TAB NAV ──
+function go(name) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'stitch') renderStitch();
+}
+
+// ── RECORDING ──
+async function toggleRec() {
+  isRec ? stopRec() : await startRec();
+}
+
+async function startRec() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch {
+    toast('Microphone access denied');
+    return;
+  }
+
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = actx.createMediaStreamSource(stream);
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.smoothingTimeConstant = 0.75;
+  src.connect(analyser);
+
+  const mime = bestMime();
+  mediaRec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  chunks = [];
+  mediaRec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  mediaRec.onstop = finalize;
+  mediaRec.start(100);
+
+  isRec = true;
+  recStart = Date.now();
+  waveHistory = [];
+
+  setUI(true);
+  drawLive();
+
+  timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - recStart) / 1000;
+    setTimer(elapsed);
+    setRing(elapsed / MAX_SEC);
+    if (elapsed >= MAX_SEC) stopRec();
+  }, 50);
+}
+
+function stopRec() {
+  if (!isRec) return;
+  isRec = false;
+  clearInterval(timerInterval);
+  timerInterval = null;
+  if (mediaRec && mediaRec.state !== 'inactive') mediaRec.stop();
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  setUI(false);
+  stopLive();
+}
+
+function finalize() {
+  if (!chunks.length) return;
+  const mime = mediaRec.mimeType || 'audio/webm';
+  const blob = new Blob(chunks, { type: mime });
+  const duration = Math.min((Date.now() - recStart) / 1000, MAX_SEC);
+  const url = URL.createObjectURL(blob);
+  clips.push({
+    id: Date.now(),
+    name: `Clip ${clips.length + 1}`,
+    duration,
+    url, blob,
+    ts: new Date(),
+    snap: [...lastSnapshot]
+  });
+  renderAll();
+  toast(`Saved · ${fmtDur(duration)}`);
+  if (actx) { actx.close(); actx = null; analyser = null; }
+}
+
+// ── UI STATE ──
+function setUI(rec) {
+  const btn = document.getElementById('recBtn');
+  const dot = document.getElementById('recDot');
+  const wrap = document.getElementById('ringWrap');
+  const status = document.getElementById('recStatus');
+  const limit = document.getElementById('recLimit');
+
+  btn.closest('.ring-wrap') && (btn.closest('.ring-wrap').className = rec ? 'ring-wrap recording' : 'ring-wrap');
+  wrap.className = rec ? 'ring-wrap recording' : 'ring-wrap';
+
+  if (rec) {
+    status.textContent = 'Recording';
+    status.classList.add('live');
+    dot.classList.add = dot.style.cssText = '';
+    limit.textContent = '30s max';
+  } else {
+    status.textContent = 'Ready';
+    status.classList.remove('live');
+    document.getElementById('recTimer').textContent = '0:00';
+    document.getElementById('recLimit').textContent = 'up to 30s';
+    setRing(0);
+  }
+}
+
+function setTimer(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  document.getElementById('recTimer').textContent = `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+const CIRC = 2 * Math.PI * 39; // 245.04
+function setRing(t) {
+  document.getElementById('ringFill').style.strokeDashoffset = CIRC * (1 - Math.min(t, 1));
+}
+
+// ── CANVAS / WAVEFORM ──
+let cvs, gfx, cvsDpr;
+
+function initCanvas() {
+  cvs = document.getElementById('wave');
+  gfx = cvs.getContext('2d');
+  cvsDpr = window.devicePixelRatio || 1;
+  const w = cvs.parentElement.offsetWidth;
+  const h = 100;
+  cvs.width = w * cvsDpr;
+  cvs.height = h * cvsDpr;
+  cvs.style.width = w + 'px';
+  cvs.style.height = h + 'px';
+  gfx.scale(cvsDpr, cvsDpr);
+}
+
+function drawIdle() {
+  if (!cvs) return;
+  const w = cvs.offsetWidth, h = cvs.offsetHeight;
+  gfx.clearRect(0, 0, w, h);
+  const n = 48, bw = 2.5;
+  const gap = (w - n * bw) / (n - 1);
+  gfx.fillStyle = '#e8e8e8';
+  for (let i = 0; i < n; i++) {
+    const x = i * (bw + gap);
+    const bh = 4 + Math.sin(i * 0.45) * 7 + Math.sin(i * 0.18) * 5;
+    gfx.beginPath();
+    gfx.roundRect(x, h/2 - bh/2, bw, bh, 1.5);
+    gfx.fill();
+  }
+}
+
+function drawLive() {
+  if (!analyser) return;
+  const w = cvs.offsetWidth, h = cvs.offsetHeight;
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(buf);
+
+  let rms = 0;
+  for (let v of buf) { const s = (v - 128) / 128; rms += s * s; }
+  rms = Math.sqrt(rms / buf.length);
+
+  waveHistory.push(rms);
+  if (waveHistory.length > 64) waveHistory.shift();
+  lastSnapshot = [...waveHistory];
+
+  gfx.clearRect(0, 0, w, h);
+  const n = waveHistory.length;
+  const bw = 2.5;
+  const gap = (w - n * bw) / Math.max(n - 1, 1);
+
+  waveHistory.forEach((val, i) => {
+    const x = i * (bw + gap);
+    const bh = Math.max(3.5, val * 140);
+    const alpha = 0.25 + (i / n) * 0.75;
+    gfx.fillStyle = `rgba(255,59,48,${alpha.toFixed(2)})`;
+    gfx.beginPath();
+    gfx.roundRect(x, h/2 - bh/2, bw, Math.min(bh, h - 4), 1.5);
+    gfx.fill();
+  });
+
+  raf = requestAnimationFrame(drawLive);
+}
+
+function stopLive() {
+  if (raf) { cancelAnimationFrame(raf); raf = null; }
+  drawIdle();
+}
+
+// ── RENDER CLIPS ──
+function renderAll() {
+  const list = document.getElementById('clipsList');
+  const empty = document.getElementById('clipsEmpty');
+  const sub = document.getElementById('clipsSub');
+  const badge = document.getElementById('badge');
+
+  // Badge
+  if (clips.length > 0) {
+    badge.textContent = clips.length > 9 ? '9+' : clips.length;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+
+  // Subtitle
+  if (clips.length === 0) {
+    sub.textContent = 'No clips yet';
+    empty.style.display = 'flex';
+    // clear clip rows
+    list.querySelectorAll('.clip-row').forEach(el => el.remove());
+    return;
+  }
+
+  const total = clips.reduce((a, c) => a + c.duration, 0);
+  sub.textContent = `${clips.length} clip${clips.length > 1 ? 's' : ''} · ${fmtDur(total)} total`;
+  empty.style.display = 'none';
+
+  // Sync rows
+  const existing = new Set([...list.querySelectorAll('.clip-row')].map(el => Number(el.dataset.id)));
+  const current = new Set(clips.map(c => c.id));
+
+  // Remove stale
+  list.querySelectorAll('.clip-row').forEach(el => {
+    if (!current.has(Number(el.dataset.id))) el.remove();
+  });
+
+  // Add new
+  clips.forEach(clip => {
+    if (!existing.has(clip.id)) {
+      const el = mkClipRow(clip);
+      list.appendChild(el);
+      setTimeout(() => drawMini(el.querySelector('.mini-wave'), clip.snap), 0);
+    }
+  });
+}
+
+function mkClipRow(clip) {
+  const div = document.createElement('div');
+  div.className = 'clip-row';
+  div.dataset.id = clip.id;
+  div.innerHTML = `
+    <button class="play-btn" data-id="${clip.id}" onclick="togglePlay(${clip.id},this)">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+        <path class="pi" d="M3 2l9 5-9 5z"/>
+      </svg>
+    </button>
+    <div class="clip-info">
+      <div class="clip-name">${clip.name}</div>
+      <div class="clip-meta">${fmtDur(clip.duration)} · ${fmtTime(clip.ts)}</div>
+    </div>
+    <canvas class="mini-wave" width="52" height="24"></canvas>
+    <button class="del-btn" onclick="delClip(${clip.id})">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M2 4.5h11M5 4.5V3h5v1.5M6 7.5v4M9 7.5v4M3.5 4.5l.8 7.5h6.4l.8-7.5"/>
+      </svg>
+    </button>`;
+  return div;
+}
+
+function drawMini(canvas, data) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  if (!data || !data.length) {
+    ctx.fillStyle = '#e0e0e0';
+    for (let i = 0; i < 8; i++) ctx.fillRect(i * 7, h/2 - 2, 3, 4);
+    return;
+  }
+  const step = Math.max(1, Math.floor(data.length / 10));
+  const bars = [];
+  for (let i = 0; i < data.length; i += step) bars.push(data[i]);
+  const bw = 2.5, gap = (w - bars.length * bw) / Math.max(bars.length - 1, 1);
+  ctx.fillStyle = '#c8c8c8';
+  bars.forEach((v, i) => {
+    const bh = Math.max(3, v * 72);
+    ctx.beginPath();
+    ctx.roundRect(i * (bw + gap), h/2 - bh/2, bw, bh, 1);
+    ctx.fill();
+  });
+}
+
+// ── PLAYBACK ──
+function togglePlay(id, btn) {
+  const clip = clips.find(c => c.id === id);
+  if (!clip) return;
+
+  if (curPlayId === id && curAudio && !curAudio.paused) {
+    curAudio.pause();
+    curAudio.currentTime = 0;
+    resetBtn(btn);
+    curPlayId = null;
+    return;
+  }
+
+  if (curAudio) {
+    curAudio.pause();
+    curAudio.currentTime = 0;
+    document.querySelectorAll('.play-btn.playing').forEach(b => resetBtn(b));
+  }
+
+  curAudio = new Audio(clip.url);
+  curPlayId = id;
+  btn.classList.add('playing');
+  btn.querySelector('.pi').setAttribute('d', 'M2 2h4v10H2zm6 0h4v10H8z');
+  curAudio.play();
+  curAudio.onended = () => { resetBtn(btn); curPlayId = null; };
+}
+
+function resetBtn(btn) {
+  btn.classList.remove('playing');
+  btn.querySelector('.pi')?.setAttribute('d', 'M3 2l9 5-9 5z');
+}
+
+function delClip(id) {
+  const i = clips.findIndex(c => c.id === id);
+  if (i !== -1) { URL.revokeObjectURL(clips[i].url); clips.splice(i, 1); }
+  renderAll();
+}
+
+// ── STITCH PANE ──
+function renderStitch() {
+  const list = document.getElementById('stitchList');
+  const empty = document.getElementById('stitchEmpty');
+  const btn = document.getElementById('stitchBtn');
+  const sub = document.getElementById('stitchSub');
+
+  sub.textContent = clips.length === 0 ? 'No clips to combine' : `${clips.length} clip${clips.length > 1 ? 's' : ''} ready`;
+  btn.disabled = clips.length === 0;
+
+  list.querySelectorAll('.stitch-row').forEach(el => el.remove());
+
+  if (clips.length === 0) { empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  clips.forEach((clip, idx) => {
+    const div = document.createElement('div');
+    div.className = 'stitch-row';
+    div.dataset.id = clip.id;
+    div.draggable = true;
+    div.innerHTML = `
+      <div class="handle-icon">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" opacity="0.35">
+          <circle cx="4" cy="4" r="1.4"/><circle cx="10" cy="4" r="1.4"/>
+          <circle cx="4" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/>
+        </svg>
+      </div>
+      <div class="seq-num">${idx + 1}</div>
+      <div class="clip-info">
+        <div class="clip-name">${clip.name}</div>
+        <div class="clip-meta">${fmtDur(clip.duration)}</div>
+      </div>`;
+    div.addEventListener('dragstart', dStart);
+    div.addEventListener('dragover', dOver);
+    div.addEventListener('drop', dDrop);
+    div.addEventListener('dragend', dEnd);
+    // Touch drag
+    div.addEventListener('touchstart', tStart, { passive: true });
+    div.addEventListener('touchmove', tMove, { passive: false });
+    div.addEventListener('touchend', tEnd);
+    list.appendChild(div);
+  });
+}
+
+// Drag-and-drop
+function dStart(e) {
+  dragSrc = this;
+  this.style.opacity = '0.45';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function dOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
+function dDrop(e) {
+  e.stopPropagation();
+  this.classList.remove('drag-over');
+  if (dragSrc === this) return;
+  const a = clips.findIndex(c => c.id === Number(dragSrc.dataset.id));
+  const b = clips.findIndex(c => c.id === Number(this.dataset.id));
+  if (a !== -1 && b !== -1) { const [m] = clips.splice(a, 1); clips.splice(b, 0, m); renderStitch(); }
+}
+function dEnd() { this.style.opacity = ''; document.querySelectorAll('.stitch-row').forEach(r => r.classList.remove('drag-over')); }
+
+// Touch drag
+let touchDragEl = null, touchGhost = null, touchStartY = 0;
+function tStart(e) {
+  touchDragEl = this;
+  touchStartY = e.touches[0].clientY;
+  this.style.transition = 'none';
+}
+function tMove(e) {
+  if (!touchDragEl) return;
+  e.preventDefault();
+  const y = e.touches[0].clientY;
+  const els = [...document.querySelectorAll('.stitch-row')];
+  const target = els.find(el => {
+    const r = el.getBoundingClientRect();
+    return y >= r.top && y <= r.bottom && el !== touchDragEl;
+  });
+  if (target) {
+    const a = clips.findIndex(c => c.id === Number(touchDragEl.dataset.id));
+    const b = clips.findIndex(c => c.id === Number(target.dataset.id));
+    if (a !== -1 && b !== -1) { const [m] = clips.splice(a, 1); clips.splice(b, 0, m); renderStitch(); touchDragEl = document.querySelector(`.stitch-row[data-id="${m.id}"]`); }
+  }
+}
+function tEnd() { if (touchDragEl) { touchDragEl.style.transition = ''; touchDragEl = null; } }
+
+// ── STITCH AUDIO ──
+async function stitch() {
+  if (!clips.length) return;
+  const progRow = document.getElementById('progRow');
+  const fill = document.getElementById('progFill');
+  const label = document.getElementById('progLabel');
+
+  progRow.classList.add('show');
+  fill.style.width = '0%';
+  label.textContent = 'Preparing…';
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buffers = [];
+
+    for (let i = 0; i < clips.length; i++) {
+      fill.style.width = ((i / clips.length) * 70) + '%';
+      label.textContent = `Decoding ${i + 1}/${clips.length}…`;
+      const res = await fetch(clips[i].url);
+      const ab = await res.arrayBuffer();
+      buffers.push(await ctx.decodeAudioData(ab));
+      await sleep(10);
+    }
+
+    fill.style.width = '80%';
+    label.textContent = 'Stitching…';
+
+    const rate = buffers[0].sampleRate;
+    const total = buffers.reduce((a, b) => a + b.length, 0);
+    const out = ctx.createBuffer(1, total, rate);
+    const ch = out.getChannelData(0);
+    let off = 0;
+    for (const b of buffers) { ch.set(b.getChannelData(0), off); off += b.length; }
+
+    fill.style.width = '95%';
+    label.textContent = 'Encoding…';
+    await sleep(50);
+
+    const wav = encodeWAV(ch, rate);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const dur = out.length / rate;
+
+    compilations.unshift({ id: Date.now(), name: `Comp ${compilations.length + 1}`, dur, url, ts: new Date() });
+
+    fill.style.width = '100%';
+    label.textContent = 'Done!';
+    await sleep(800);
+
+    progRow.classList.remove('show');
+    renderComps();
+    toast(`Compilation ready · ${fmtDur(dur)}`);
+    ctx.close();
+  } catch (err) {
+    console.error(err);
+    progRow.classList.remove('show');
+    toast('Something went wrong — try again');
+  }
+}
+
+function renderComps() {
+  const sec = document.getElementById('compSection');
+  const list = document.getElementById('compList');
+  if (!compilations.length) { sec.classList.remove('show'); return; }
+  sec.classList.add('show');
+  list.innerHTML = '';
+  compilations.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comp-row';
+    div.innerHTML = `
+      <button class="comp-play-btn" onclick="playComp(${c.id})">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor"><path d="M2 1l10 5.5L2 12z"/></svg>
+      </button>
+      <div class="comp-info">
+        <div class="comp-name">${c.name}</div>
+        <div class="comp-meta">${fmtDur(c.dur)} · ${fmtTime(c.ts)}</div>
+      </div>
+      <button class="comp-dl" onclick="dlComp(${c.id})">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M8.5 2v9M5.5 8l3 3 3-3M2 14h13"/>
+        </svg>
+      </button>`;
+    list.appendChild(div);
+  });
+}
+
+function playComp(id) {
+  const c = compilations.find(x => x.id === id);
+  if (!c) return;
+  if (curAudio) { curAudio.pause(); curAudio.currentTime = 0; }
+  curAudio = new Audio(c.url);
+  curAudio.play();
+}
+
+function dlComp(id) {
+  const c = compilations.find(x => x.id === id);
+  if (!c) return;
+  const a = document.createElement('a');
+  a.href = c.url;
+  a.download = `memo_comp_${Date.now()}.wav`;
+  a.click();
+}
+
+function clearAll() {
+  if (!clips.length) return;
+  clips.forEach(c => URL.revokeObjectURL(c.url));
+  clips = [];
+  renderAll();
+  renderStitch();
+  toast('All clips cleared');
+}
+
+// ── WAV ENCODER ──
+function encodeWAV(samples, rate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(buf);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4, 36 + samples.length*2, true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,samples.length*2,true);
+  let o = 44;
+  for (let s of samples) { const x = Math.max(-1,Math.min(1,s)); v.setInt16(o, x<0?x*0x8000:x*0x7FFF, true); o+=2; }
+  return buf;
+}
+
+// ── UTILS ──
+function fmtDur(s) {
+  const sec = Math.floor(s), m = Math.floor(sec/60);
+  return m > 0 ? `${m}:${String(sec%60).padStart(2,'0')}` : `${sec}s`;
+}
+function fmtTime(d) { return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function bestMime() {
+  return ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
+    .find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
