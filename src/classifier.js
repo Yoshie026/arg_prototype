@@ -39,6 +39,10 @@ export async function recordAudio(durationMs = 4000) {
   }
   const actualRate = audioCtx.sampleRate;
 
+  // Modern browsers start AudioContexts suspended — must resume within a
+  // user-gesture callback or onaudioprocess fires with zero-filled buffers.
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const source = audioCtx.createMediaStreamSource(stream);
 
