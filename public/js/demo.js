@@ -52,8 +52,16 @@
     leftPad.h = Math.max(62, Math.floor(h * 0.14));
     rightPad.h = leftPad.h;
 
-    leftPad.x = Math.max(8, appRect.left - gap - leftPad.w);
-    rightPad.x = Math.min(w - rightPad.w - 8, appRect.right + gap);
+    // On narrow screens the app fills the viewport, so place paddles
+    // just inside the edges rather than outside the app.
+    const narrow = appRect.left < gap + padW + 12;
+    if (narrow) {
+      leftPad.x = 6;
+      rightPad.x = w - rightPad.w - 6;
+    } else {
+      leftPad.x = Math.max(8, appRect.left - gap - leftPad.w);
+      rightPad.x = Math.min(w - rightPad.w - 8, appRect.right + gap);
+    }
 
     if (!paddlesInitialized) {
       leftPad.y = h * 0.24;
