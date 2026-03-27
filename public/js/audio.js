@@ -6,6 +6,7 @@ class AudioEngine {
         this.mediaStream = null;
         this.mediaRecorder = null;
         this.isRecording = false;
+        this.stopPromise = null;
         this.recordedChunks = [];
         this.liveSource = null;
         this.liveAnalyser = null;
@@ -64,6 +65,7 @@ class AudioEngine {
         this.mediaRecorder = mimeType
             ? new MediaRecorder(this.mediaStream, { mimeType })
             : new MediaRecorder(this.mediaStream);
+        this.stopPromise = null;
         this.recordedChunks = [];
         this.mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) this.recordedChunks.push(e.data);
@@ -80,25 +82,31 @@ class AudioEngine {
     }
 
     async stopRecording() {
-        if (!this.isRecording) return null;
+        if (this.stopPromise) return this.stopPromise;
+        if (!this.isRecording || !this.mediaRecorder) return null;
         clearTimeout(this._autoStopTimer);
-        return new Promise((resolve, reject) => {
-            this.mediaRecorder.onstop = async () => {
+        const recorder = this.mediaRecorder;
+        this.isRecording = false;
+        this.stopPromise = new Promise((resolve, reject) => {
+            recorder.onstop = async () => {
                 try {
-                    const blob = new Blob(this.recordedChunks, { type: this.mediaRecorder.mimeType });
+                    const blob = new Blob(this.recordedChunks, { type: recorder.mimeType });
                     this.lastRecordingBlob = blob;
                     const arrayBuffer = await blob.arrayBuffer();
                     this.recordedBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
                     if (this.liveSource) this.liveSource.disconnect();
-                    this.mediaStream.getTracks().forEach(t => t.stop());
+                    if (this.mediaStream) this.mediaStream.getTracks().forEach(t => t.stop());
                     this.liveSource = null;
                     this.liveAnalyser = null;
-                    this.isRecording = false;
+                    this.mediaRecorder = null;
+                    this.mediaStream = null;
                     resolve(this.recordedBuffer);
-                } catch (err) { this.isRecording = false; reject(err); }
+                } catch (err) { reject(err); }
             };
-            this.mediaRecorder.stop();
+            if (recorder.state !== 'inactive') recorder.stop();
+            else recorder.onstop();
         });
+        return this.stopPromise.finally(() => { this.stopPromise = null; });
     }
 
     getLiveFrequencyData() {

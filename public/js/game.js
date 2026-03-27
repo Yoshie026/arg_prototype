@@ -19,6 +19,7 @@ class AudioTennis {
         this._bound = false;
         this._poll = null;
         this._needsPoll = false;
+        this._stoppingRecording = false;
 
         this.bindLobby();
         this.preloadClap();
@@ -356,10 +357,20 @@ class AudioTennis {
                     if (!this.targetEmbedding) {
                         recBtn.disabled = true;
                         recBtn.textContent = 'Loading\u2026';
-                        this.loadTargetAudio().then(() => {
-                            recBtn.disabled = false;
-                            recBtn.textContent = 'Record';
-                        });
+                        this.loadTargetAudio()
+                            .then(() => {
+                                if (this.targetEmbedding) {
+                                    recBtn.disabled = false;
+                                    recBtn.textContent = 'Record';
+                                } else {
+                                    recBtn.disabled = true;
+                                    recBtn.textContent = 'Load failed';
+                                }
+                            })
+                            .catch(() => {
+                                recBtn.disabled = true;
+                                recBtn.textContent = 'Load failed';
+                            });
                     }
                     this.showViz('target');
                 } else {
@@ -445,18 +456,26 @@ class AudioTennis {
     // ── Audio loading ────────────────────────────────────────
 
     async loadTargetAudio() {
-        if (this.audio.targetBuffer) return;
         try {
-            const buf = await this.audio.decodeBlob(await this.api.getTargetAudio());
-            this.audio.targetBuffer = buf;
+            let buf = this.audio.targetBuffer;
+            if (!buf) {
+                buf = await this.audio.decodeBlob(await this.api.getTargetAudio());
+                this.audio.targetBuffer = buf;
+            }
             if (this.viz) {
                 const f = this.audio.extractFeatures(buf);
                 this.viz.drawFingerprint(this.viz.targetCtx, this.viz.targetCanvas, f, 'TARGET');
             }
-            const clean = this.audio.getCleanEventSamples(buf);
-            this.targetEmbedding = await window.clapEngine.embed(clean, buf.sampleRate);
+            if (!this.targetEmbedding) {
+                const clean = this.audio.getCleanEventSamples(buf);
+                this.targetEmbedding = await window.clapEngine.embed(clean, buf.sampleRate);
+            }
             if (this.game.targetLocation) this.showMap(this.game.targetLocation);
-        } catch (e) { console.error('Target load error:', e); }
+        } catch (e) {
+            this.targetEmbedding = null;
+            console.error('Target load error:', e);
+            throw e;
+        }
     }
 
     async loadAttemptAudio() {
@@ -499,6 +518,8 @@ class AudioTennis {
     }
 
     async stopRecording() {
+        if (this._stoppingRecording) return;
+        this._stoppingRecording = true;
         cancelAnimationFrame(this.liveAnimFrame);
         const btn = document.getElementById('record-btn');
         btn.classList.remove('recording');
@@ -522,6 +543,12 @@ class AudioTennis {
                 document.getElementById('play-recorded').textContent = 'Play back';
                 this.msg('Sound good?');
             } else {
+                if (!this.targetEmbedding) {
+                    await this.loadTargetAudio();
+                }
+                if (!this.targetEmbedding) {
+                    throw new Error('Target sound is still loading. Please try again.');
+                }
                 const f = this.audio.extractFeatures(buffer);
                 this.showViz('recorded');
                 this.viz.drawFingerprint(this.viz.recordedCtx, this.viz.recordedCanvas, f, 'YOUR ATTEMPT');
@@ -550,6 +577,8 @@ class AudioTennis {
             btn.classList.remove('analyzing');
             btn.textContent = 'Record';
             btn.disabled = false;
+        } finally {
+            this._stoppingRecording = false;
         }
     }
 
