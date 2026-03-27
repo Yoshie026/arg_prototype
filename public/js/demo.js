@@ -45,7 +45,7 @@
 
     const appRect = app.getBoundingClientRect();
     const gap = Math.max(10, Math.min(30, w * 0.02));
-    const padW = Math.max(6, Math.floor(w * 0.012));
+    const padW = Math.max(10, Math.floor(w * 0.015));
 
     leftPad.w = padW;
     rightPad.w = padW;
