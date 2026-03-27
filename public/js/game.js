@@ -298,6 +298,16 @@ class AudioTennis {
     render() {
         const g = this.game;
         if (!g || this.audio.isRecording) return;
+
+        // Clear stale audio when the round advances (e.g. other player clicked "Next Round")
+        if (g.round !== this._currentRound) {
+            this.audio.targetBuffer = null;
+            this.audio.recordedBuffer = null;
+            this.targetEmbedding = null;
+            if (this.viz) this.viz.clear();
+            this._currentRound = g.round;
+        }
+
         this.isSetter = g.isSetter;
         this.updateGameMeta();
 
