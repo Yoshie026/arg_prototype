@@ -98,9 +98,11 @@ body {
 }
 
 #screen-lobby h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 6.6vw, 2.6rem);
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: 0.05em;
+    line-height: 1.12;
+    text-transform: uppercase;
     margin-bottom: 26px;
 }
 
@@ -628,7 +630,7 @@ canvas:not(#side-motif) {
     }
 
     #screen-lobby h1 {
-        font-size: 1.72rem;
+        font-size: clamp(1.5rem, 6.6vw, 2.6rem);
     }
 
     #status-msg {

@@ -157,5 +157,5 @@ app.post('/api/games/:code/next-round', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Sound Tennis running on http://localhost:${PORT}`);
+    console.log(`Noise Tennis running on http://localhost:${PORT}`);
 });

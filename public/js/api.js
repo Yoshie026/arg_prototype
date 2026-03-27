@@ -1,5 +1,5 @@
 /**
- * REST API client for Sound Tennis.
+ * REST API client for Noise Tennis.
  * Stores per-game tokens in localStorage for async rejoining.
  */
 class Api {
