@@ -337,7 +337,7 @@ function shuffle(arr, rng) {
  * 3 easy + 3 medium + 3 hard, shuffled into a random arrangement.
  */
 // Bump this to reshuffle today's grid (also invalidates saved state).
-export const GRID_VERSION = 3;
+export const GRID_VERSION = 4;
 
 export function generateGrid(dateStr) {
   const rng = seededRandom(dateStr + ':v' + GRID_VERSION);

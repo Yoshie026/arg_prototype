@@ -199,7 +199,7 @@ function render() {
                   <div class="listening-info">
                     <div class="rec-indicator"><span class="countdown" id="countdown">${state.countdown}</span></div>
                     <p class="listening-target">Recording for <strong>${state.sounds[state.listening]?.name}</strong></p>
-                    <p class="detected">Hold your device near the sound</p>
+                    <p class="detected">(Hold your device near the sound)</p>
                   </div>
                 </div>`
               : state.phase === 'analyzing'

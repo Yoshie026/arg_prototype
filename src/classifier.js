@@ -2,15 +2,21 @@
 // Records audio from the mic → encodes as WAV → sends to the LLM for
 // natural-language sound identification.  Far more accurate than a
 // fixed-category classifier like YAMNet.
+//
+// In production the request is proxied through /api/classify (Netlify Function)
+// so the API key stays server-side. In local dev it calls OpenRouter directly
+// using the VITE_OPENROUTER_KEY env var.
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-flash';
 
-// ── Init: just validate that the API key exists ─────────────────────
+const IS_DEV = import.meta.env.DEV;
+const DEV_KEY = import.meta.env.VITE_OPENROUTER_KEY;
+
+// ── Init: validate that we can make API calls ───────────────────────
 
 export function init() {
-  const key = import.meta.env.VITE_OPENROUTER_KEY;
-  if (!key) {
+  if (IS_DEV && !DEV_KEY) {
     throw new Error(
       'Missing VITE_OPENROUTER_KEY — add it to your .env file.',
     );
@@ -87,53 +93,76 @@ export async function recordAudio(durationMs = 4000) {
 // ── Send audio to OpenRouter for classification ─────────────────────
 
 export async function classifyAudio(wavBase64, targetName, matchHint) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_KEY;
-
+  // Single call — the model needs the audio AND the target together to use
+  // timbral/tonal cues for discrimination. Confirmation bias is counteracted
+  // by adversarial framing: the model's job is to REJECT, not confirm.
   const prompt = [
-    'Listen carefully to this audio recording.',
+    'You are a strict audio verification system. Your job is to REJECT false matches.',
+    'Users will try to trick you with similar-sounding substitutes. Be skeptical.',
     '',
-    'Step 1: List every distinct sound you can identify. Be specific.',
+    'Step 1: List every distinct sound you hear. Be as specific as possible',
+    '(e.g. "violin" not "music", "dog bark" not "animal sound").',
     '',
-    'Step 2: The target sound is "' + targetName + '".',
-    'Based ONLY on your analysis from Step 1, is the target sound present?',
-    'Rate your confidence 0.0–1.0.',
+    `Step 2: The target sound is "${targetName}"` +
+      (matchHint ? ` (described as: ${matchHint})` : '') + '.',
+    'Does any sound you identified in Step 1 SPECIFICALLY match this target?',
+    '',
+    'Rules:',
+    '- If you heard a DIFFERENT specific sound in the same category, that is NOT a match.',
+    '  (e.g. guitar ≠ violin, dog ≠ cat, clapping ≠ knocking)',
+    '- If your identification is vague or uncertain, that is NOT a match.',
+    '- Ambient noise, background hum, or silence is NEVER a match.',
+    '- Only return match:true if you are confident the EXACT target sound is present.',
     '',
     'Reply with ONLY valid JSON (no markdown fences):',
     '{"heard": ["sound1", "sound2"], "match": true or false, "confidence": 0.0 to 1.0}',
   ].join('\n');
+
+  const requestBody = {
+    model: MODEL,
+    max_tokens: 200,
+    temperature: 0,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          {
+            type: 'input_audio',
+            input_audio: { data: wavBase64, format: 'wav' },
+          },
+        ],
+      },
+    ],
+  };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
 
   let response;
   try {
-    response = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sound-bingo.app',
-        'X-Title': 'Sound Bingo',
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 150,
-        temperature: 0.1,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              {
-                type: 'input_audio',
-                input_audio: { data: wavBase64, format: 'wav' },
-              },
-            ],
-          },
-        ],
-      }),
-    });
+    if (IS_DEV) {
+      // Local dev: call OpenRouter directly with the dev key
+      response = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${DEV_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://sound-bingo.app',
+          'X-Title': 'Sound Bingo',
+        },
+        signal: controller.signal,
+        body: JSON.stringify(requestBody),
+      });
+    } else {
+      // Production: proxy through Netlify Function (key stays server-side)
+      response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify(requestBody),
+      });
+    }
   } catch (err) {
     clearTimeout(timeout);
     if (err.name === 'AbortError')
@@ -155,9 +184,9 @@ export async function classifyAudio(wavBase64, targetName, matchHint) {
   return parseResult(content);
 }
 
-// ── Parse the LLM's JSON response (with fallback) ──────────────────
+// ── Parse the LLM's JSON response ────────────────────────────────────
 
-const CONFIDENCE_THRESHOLD = 0.7;
+const CONFIDENCE_THRESHOLD = 0.75;
 
 function parseResult(content) {
   console.log('[sound-bingo] raw LLM response:', content);
@@ -174,14 +203,11 @@ function parseResult(content) {
         heard: Array.isArray(parsed.heard) ? parsed.heard : [],
       };
     } catch {
-      /* fall through to heuristic */
+      /* fall through */
     }
   }
   console.log('[sound-bingo] failed to parse JSON, defaulting to no match');
-  return {
-    match: false,
-    heard: [content.slice(0, 120)],
-  };
+  return { match: false, heard: [] };
 }
 
 // ── WAV encoder (16-bit PCM mono) ───────────────────────────────────
