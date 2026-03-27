@@ -28,21 +28,42 @@ class AudioEngine {
     }
 
     async playBuffer(buffer) {
-        if (this.audioContext.state === 'suspended') await this.audioContext.resume();
+        // Resume must be called synchronously within the user gesture on iOS.
+        // Calling start() in the same microtask ensures audio plays.
+        const resumeP = this.audioContext.state === 'suspended'
+            ? this.audioContext.resume() : Promise.resolve();
         const source = this.audioContext.createBufferSource();
         source.buffer = buffer;
         source.connect(this.audioContext.destination);
         source.start();
+        await resumeP;
         return new Promise(resolve => { source.onended = resolve; });
     }
 
     playTarget() { if (this.targetBuffer) return this.playBuffer(this.targetBuffer); }
     playRecorded() { if (this.recordedBuffer) return this.playBuffer(this.recordedBuffer); }
 
+    _pickMimeType() {
+        // Prefer MP4/AAC for cross-browser compatibility (Safari + Chrome)
+        const candidates = [
+            'audio/mp4',
+            'audio/aac',
+            'audio/webm;codecs=opus',
+            'audio/webm',
+        ];
+        for (const mime of candidates) {
+            if (MediaRecorder.isTypeSupported(mime)) return mime;
+        }
+        return undefined; // let browser pick default
+    }
+
     async startRecording() {
         if (this.isRecording) return;
         this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        this.mediaRecorder = new MediaRecorder(this.mediaStream);
+        const mimeType = this._pickMimeType();
+        this.mediaRecorder = mimeType
+            ? new MediaRecorder(this.mediaStream, { mimeType })
+            : new MediaRecorder(this.mediaStream);
         this.recordedChunks = [];
         this.mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) this.recordedChunks.push(e.data);

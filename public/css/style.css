@@ -571,7 +571,8 @@ canvas:not(#side-motif) {
     border-color: #000;
 }
 
-#record-btn.recording {
+#record-btn.recording,
+#record-btn.recording:hover {
     background: var(--danger);
     color: #fff;
     animation: none;

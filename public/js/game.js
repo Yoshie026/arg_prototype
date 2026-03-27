@@ -341,8 +341,17 @@ class AudioTennis {
                         this.msg(`${opponent} sent you a sound`);
                     }
                     this.show('play-target', 'record-btn');
+                    // Disable Record until target audio + embedding is ready
+                    const recBtn = document.getElementById('record-btn');
+                    if (!this.targetEmbedding) {
+                        recBtn.disabled = true;
+                        recBtn.textContent = 'Loading\u2026';
+                        this.loadTargetAudio().then(() => {
+                            recBtn.disabled = false;
+                            recBtn.textContent = 'Record';
+                        });
+                    }
                     this.showViz('target');
-                    this.loadTargetAudio();
                 } else {
                     if (g.attempts.length > 0) {
                         const best = g.attempts.reduce((max, a) => Math.max(max, a.score || 0), 0);
