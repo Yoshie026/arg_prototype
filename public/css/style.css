@@ -520,6 +520,9 @@ canvas:not(#side-motif) {
 
 #location-section {
     margin-bottom: 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #location-label {
@@ -533,7 +536,8 @@ canvas:not(#side-motif) {
 
 #map {
     width: 100%;
-    height: 184px;
+    flex: 1;
+    min-height: 184px;
     border-radius: 0;
     border: 1px solid var(--line);
     overflow: hidden;
@@ -557,8 +561,8 @@ canvas:not(#side-motif) {
 #record-btn {
     padding: 13px;
     font-size: 0.94rem;
-    border: 2px solid var(--danger);
-    color: var(--danger);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
     background: #fff;
 }
 
@@ -603,8 +607,16 @@ canvas:not(#side-motif) {
 }
 
 #play-target {
+    background: var(--text);
+    border-color: var(--text);
+    color: #fff;
+    padding: 13px;
+    font-size: 0.94rem;
+}
+
+#play-target:hover:not(:disabled) {
+    background: #000;
     border-color: #000;
-    color: #000;
 }
 
 /* ===== Responsive ===== */
