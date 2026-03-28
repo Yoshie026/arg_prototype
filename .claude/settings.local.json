@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcode-select -p)",
+      "Bash(brew list:*)",
+      "Bash(brew install:*)",
+      "Bash(xcodegen generate:*)",
+      "Bash(xcodegen help:*)",
+      "Bash(xcodegen --version)",
+      "Bash(xcodebuild -project WatchRecorder.xcodeproj -scheme \"WatchRecorder Watch App\" -destination \"platform=watchOS Simulator,name=Apple Watch Series 9 \\(45mm\\)\" build)",
+      "Bash(xcodebuild -project WatchRecorder.xcodeproj -scheme \"WatchRecorder Watch App\" -sdk watchos CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO)",
+      "Bash(open /Users/yoshitsugukosaka/Development/arg_prototype/WatchRecorder/WatchRecorder.xcodeproj)"
+    ]
+  }
+}
